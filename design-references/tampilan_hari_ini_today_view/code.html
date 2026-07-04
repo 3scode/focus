@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TimeBlocking - Tampilan Hari Ini</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdbcc",
+                        "on-secondary-container": "#684000",
+                        "surface-container-low": "#f5f2ff",
+                        "on-background": "#1b1b24",
+                        "inverse-primary": "#c3c0ff",
+                        "inverse-on-surface": "#f3effc",
+                        "inverse-surface": "#302f39",
+                        "secondary-container": "#fea619",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "surface-container": "#f0ecf9",
+                        "surface-container-high": "#eae6f4",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "on-primary": "#ffffff",
+                        "surface": "#fcf8ff",
+                        "secondary": "#855300",
+                        "on-surface-variant": "#464555",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "primary-container": "#4f46e5",
+                        "on-primary-container": "#dad7ff",
+                        "surface-variant": "#e4e1ee",
+                        "outline": "#777587",
+                        "tertiary": "#7e3000",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-dim": "#dcd8e5",
+                        "surface-container-highest": "#e4e1ee",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-primary-fixed": "#0f0069",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#1b1b24",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#3525cd",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c7c4d8",
+                        "secondary-fixed": "#ffddb8",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#2a1700",
+                        "surface-tint": "#4d44e3",
+                        "surface-bright": "#fcf8ff",
+                        "on-tertiary-container": "#ffd2be",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "on-secondary": "#ffffff",
+                        "background": "#fcf8ff",
+                        "primary-fixed": "#e2dfff",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "tertiary-container": "#a44100"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "margin-mobile": "16px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Inter"],
+                        "body": ["Inter"],
+                        "h2": ["Inter"],
+                        "h2-mobile": ["Inter"],
+                        "h1": ["Inter"],
+                        "h1-mobile": ["Inter"],
+                        "label": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h3": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "body": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h2-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "h1-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "label": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .time-block-drag-preview {
+            cursor: grab;
+        }
+        .time-block-drag-preview:active {
+            cursor: grabbing;
+        }
+        .glass-header {
+            background: rgba(252, 248, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body text-body selection:bg-primary-fixed selection:text-on-primary-fixed overflow-hidden">
+<!-- Side Navigation Shell -->
+<nav class="fixed h-full w-[280px] left-0 top-0 bg-surface-container-low dark:bg-surface-container-highest flex flex-col py-xl px-lg z-50">
+<div class="mb-xl">
+<h2 class="font-h2 text-h2 font-bold text-primary dark:text-inverse-primary tracking-tight">TimeBlocking</h2>
+<p class="font-label text-label text-on-surface-variant opacity-70">Fokus &amp; Alur</p>
+</div>
+<button class="mb-xl flex items-center justify-center gap-sm bg-primary-container text-on-primary-container px-lg py-md rounded-xl font-h3 text-h3 hover:opacity-90 transition-opacity w-full">
+<span class="material-symbols-outlined">add</span>
+            Tugas Baru
+        </button>
+<div class="flex flex-col gap-sm flex-1">
+<!-- Navigation Items -->
+<a class="flex items-center gap-md text-primary dark:text-inverse-primary font-bold px-md py-sm rounded-lg hover:bg-primary-container/10 transition-colors scale-[0.98]" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body text-body">Hari Ini</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm rounded-lg hover:bg-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-body text-body">Mingguan</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm rounded-lg hover:bg-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">timer</span>
+<span class="font-body text-body">Timer</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm rounded-lg hover:bg-primary-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body text-body">Ulasan</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-lg flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed overflow-hidden flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a professional woman in a bright, minimalist creative studio." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1yK7yMlpLfvNvCDqPRy5B9EmrpQE96QfL_jaYzIrXp3a1hEuEQdbb71E-NLJ1V_4zwb0qVyfpXAsUybKGAGVFrgEA0sOLtOE5wxO5T2-Eg8SmE7rERM2MgQ_O8_W93dQ7EYubsuOxhS_BhwREBNyzYH8q_6JSkMT7ZjWU6kJ2gmpFYsZkzAA-lmw3IB8Va8guEFBwuX1zGHgbWBrdL3Kmz0PXb0jr918zvdFdMuuW1ccGTWB_tIhLZ_l9AYJgtxAlUGFStqNr0Vi9"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="font-h3 text-body truncate font-bold">Alex Chen</p>
+<p class="font-label text-label text-on-surface-variant">Mode Fokus</p>
+</div>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#" title="Pengaturan">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-[280px] h-screen flex flex-col relative bg-surface-container-lowest">
+<!-- Top Sticky Header -->
+<header class="sticky top-0 z-40 glass-header border-b border-surface-container-high px-margin-desktop py-lg">
+<div class="flex items-center justify-between mb-lg">
+<div>
+<h1 class="font-h1 text-h1 text-on-surface">Selasa, 10 Maret</h1>
+<p class="font-body text-on-surface-variant">Anda memiliki 6 tugas terjadwal untuk hari ini.</p>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-sm hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="flex items-center gap-xs px-md py-sm bg-surface-container border border-outline-variant rounded-lg font-label text-label text-on-surface hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter
+                    </button>
+</div>
+</div>
+<!-- Week Strip -->
+<div class="flex gap-gutter overflow-x-auto pb-xs">
+<div class="flex-1 flex flex-col items-center py-md px-sm rounded-xl hover:bg-surface-variant cursor-pointer transition-colors">
+<span class="font-label text-label text-on-surface-variant mb-xs">SEN</span>
+<span class="font-h3 text-h3">09</span>
+</div>
+<div class="flex-1 flex flex-col items-center py-md px-sm rounded-xl bg-primary text-on-primary shadow-lg shadow-primary/20">
+<span class="font-label text-label opacity-80 mb-xs">SEL</span>
+<span class="font-h3 text-h3">10</span>
+</div>
+<div class="flex-1 flex flex-col items-center py-md px-sm rounded-xl hover:bg-surface-variant cursor-pointer transition-colors">
+<span class="font-label text-label text-on-surface-variant mb-xs">RAB</span>
+<span class="font-h3 text-h3">11</span>
+</div>
+<div class="flex-1 flex flex-col items-center py-md px-sm rounded-xl hover:bg-surface-variant cursor-pointer transition-colors">
+<span class="font-label text-label text-on-surface-variant mb-xs">KAM</span>
+<span class="font-h3 text-h3">12</span>
+</div>
+<div class="flex-1 flex flex-col items-center py-md px-sm rounded-xl hover:bg-surface-variant cursor-pointer transition-colors">
+<span class="font-label text-label text-on-surface-variant mb-xs">JUM</span>
+<span class="font-h3 text-h3">13</span>
+</div>
+<div class="flex-1 flex flex-col items-center py-md px-sm rounded-xl hover:bg-surface-variant cursor-pointer transition-colors">
+<span class="font-label text-label text-on-surface-variant mb-xs">SAB</span>
+<span class="font-h3 text-h3">14</span>
+</div>
+<div class="flex-1 flex flex-col items-center py-md px-sm rounded-xl hover:bg-surface-variant cursor-pointer transition-colors">
+<span class="font-label text-label text-on-surface-variant mb-xs">MIN</span>
+<span class="font-h3 text-h3">15</span>
+</div>
+</div>
+</header>
+<!-- Timeline Scroll Area -->
+<div class="flex-1 overflow-y-auto custom-scrollbar px-margin-desktop py-xl relative">
+<!-- Time Indicator Line (Current Time) -->
+<div class="absolute left-0 right-0 z-10 pointer-events-none" style="top: 240px;">
+<div class="relative w-full">
+<div class="absolute left-[-8px] top-[-6px] w-3 h-3 rounded-full bg-error"></div>
+<div class="h-0.5 bg-error w-full opacity-30"></div>
+</div>
+</div>
+<div class="max-w-4xl mx-auto space-y-md">
+<!-- 08:00 Slot (Empty) -->
+<div class="flex gap-lg group">
+<div class="w-16 flex-shrink-0 text-right">
+<span class="font-label text-label text-on-surface-variant opacity-60">08:00</span>
+</div>
+<div class="flex-1 h-12 border-b border-dashed border-outline-variant/30 flex items-center group-hover:border-primary/40 transition-colors">
+<button class="opacity-0 group-hover:opacity-100 flex items-center gap-xs font-label text-label text-primary transition-opacity pl-md">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                            Jadwalkan fokus
+                        </button>
+</div>
+</div>
+<!-- 09:00 Block (Active) -->
+<div class="flex gap-lg">
+<div class="w-16 flex-shrink-0 text-right py-md">
+<span class="font-label text-label text-on-surface-variant">09:00</span>
+</div>
+<div class="flex-1 bg-white rounded-xl border-l-4 border-primary-container shadow-sm p-md flex justify-between items-center hover:shadow-md transition-all time-block-drag-preview group">
+<div class="flex items-center gap-lg">
+<div class="p-sm bg-primary-container/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">design_services</span>
+</div>
+<div>
+<h3 class="font-h3 text-body font-bold text-on-surface">Desain Produk</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                                    Kerja • 09:00 - 10:30
+                                </p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">timer</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 10:30 Slot (Empty) -->
+<div class="flex gap-lg group">
+<div class="w-16 flex-shrink-0 text-right">
+<span class="font-label text-label text-on-surface-variant opacity-60">10:30</span>
+</div>
+<div class="flex-1 h-12 border-b border-dashed border-outline-variant/30 flex items-center group-hover:border-primary/40 transition-colors"></div>
+</div>
+<!-- 11:00 Block -->
+<div class="flex gap-lg">
+<div class="w-16 flex-shrink-0 text-right py-md">
+<span class="font-label text-label text-on-surface-variant">11:00</span>
+</div>
+<div class="flex-1 bg-white rounded-xl border-l-4 border-[#3B82F6] shadow-sm p-md flex justify-between items-center hover:shadow-md transition-all time-block-drag-preview group">
+<div class="flex items-center gap-lg">
+<div class="p-sm bg-blue-50 rounded-lg text-blue-600">
+<span class="material-symbols-outlined">groups</span>
+</div>
+<div>
+<h3 class="font-h3 text-body font-bold text-on-surface">Sinkronisasi Mingguan</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-[#3B82F6]"></span>
+                                    Kerja • 11:00 - 12:00
+                                </p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="px-md py-xs bg-blue-50 text-blue-600 rounded-full font-label text-[10px] uppercase tracking-wider">Mendatang</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 12:00 Slot -->
+<div class="flex gap-lg group">
+<div class="w-16 flex-shrink-0 text-right">
+<span class="font-label text-label text-on-surface-variant opacity-60">12:00</span>
+</div>
+<div class="flex-1 h-20 border-b border-dashed border-outline-variant/30 flex items-center justify-center bg-surface-container/20 group-hover:bg-surface-container/40 transition-colors rounded-lg">
+<span class="font-label text-label text-on-surface-variant/50">Istirahat Makan Siang</span>
+</div>
+</div>
+<!-- 13:30 Block -->
+<div class="flex gap-lg">
+<div class="w-16 flex-shrink-0 text-right py-md">
+<span class="font-label text-label text-on-surface-variant">13:30</span>
+</div>
+<div class="flex-1 bg-white rounded-xl border-l-4 border-tertiary shadow-sm p-md flex justify-between items-center hover:shadow-md transition-all time-block-drag-preview group">
+<div class="flex items-center gap-lg">
+<div class="p-sm bg-tertiary-fixed rounded-lg text-tertiary">
+<span class="material-symbols-outlined">edit_note</span>
+</div>
+<div>
+<h3 class="font-h3 text-body font-bold text-on-surface">Kerja Mendalam: Roadmap</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                                    Strategis • 13:30 - 15:30
+                                </p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-200">
+<img class="w-full h-full rounded-full object-cover" data-alt="Portrait of a professional man with glasses." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKD6RdNYtSWEWfTZK_uv1WsPO246LqU6ZZg1M3qx0v9rI35Lc3aoaE8H1t2wg3TO9at-pKevZkDsDzepoxsHmN-p4ZcaPUdM6MenmvcEO3djPMqX_PtK5ohMCJ7lcFNIB6orZCMj4R_z2OsUBBEBug96LtGvlQLLVbeqmPwZ2sGMwMqdV4-CzX8CwWk79eV5Dsav9Ds1vGhfSsAa_VpbLaL0_YqDqb_5f7Bk3z54ucjie-ff_5UwJlFPm10jSvjHPUu6pRE_E7Bxvf"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-200">
+<img class="w-full h-full rounded-full object-cover" data-alt="Portrait of a senior businesswoman." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHj773qZWa2TFnPR9DOJ8rqxjehh23_gW-ZBDDrqxxR3OFec5KNegURUDgFAY0s7yX_D-DzpkF1E9gEXTh1s5_31OmjokG1Ocg2p81_bbBoVU9tcaNxr9P6mW-HiL07X4mWxNmU22zhPQ9LYLrhVoXhpnGUd52DAq4XEJHV7w2xZKN8Px5x1iH3kXQ0E3cKWezDBAr0s3R9AgkiMGZb8VZoGncub6ZzXZ5XQFL0G3YSF86yxHuNuy2x7zQAcGjNZdgZbryeDZdCEkr"/>
+</div>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 16:00 Block (Completed) -->
+<div class="flex gap-lg opacity-60 scale-[0.99] grayscale-[0.5]">
+<div class="w-16 flex-shrink-0 text-right py-md">
+<span class="font-label text-label text-on-surface-variant">16:00</span>
+</div>
+<div class="flex-1 bg-surface rounded-xl border-l-4 border-outline-variant shadow-sm p-md flex justify-between items-center">
+<div class="flex items-center gap-lg">
+<div class="p-sm bg-surface-container rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<h3 class="font-h3 text-body font-bold text-on-surface line-through">Inbox Zero</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs">
+                                    Admin • 16:00 - 16:30
+                                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom spacer for FAB -->
+<div class="h-32"></div>
+</div>
+</div>
+<!-- Progress and Action Bar -->
+<div class="absolute bottom-0 left-0 right-0 p-lg pointer-events-none">
+<div class="max-w-4xl mx-auto flex items-end justify-between">
+<!-- Completion Stats Card -->
+<div class="bg-white/90 backdrop-blur-md rounded-2xl p-md shadow-xl border border-outline-variant/20 w-64 pointer-events-auto">
+<div class="flex justify-between items-center mb-sm">
+<span class="font-label text-label text-on-surface">Kemajuan Hari Ini</span>
+<span class="font-label text-label text-primary">66%</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container rounded-full transition-all duration-700" style="width: 66.6%"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-sm">4/6 tugas selesai</p>
+</div>
+<!-- FAB -->
+<button class="w-16 h-16 bg-primary text-on-primary rounded-2xl shadow-2xl shadow-primary/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform pointer-events-auto">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Context Interaction Script -->
+<script>
+        // Simple drag interaction simulation visual only
+        const blocks = document.querySelectorAll('.time-block-drag-preview');
+        blocks.forEach(block => {
+            block.addEventListener('mousedown', () => {
+                block.classList.add('scale-[0.98]', 'shadow-inner');
+            });
+            block.addEventListener('mouseup', () => {
+                block.classList.remove('scale-[0.98]', 'shadow-inner');
+            });
+        });
+
+        // Current time indicator update simulation
+        function updateTimeLine() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+        }
+        setInterval(updateTimeLine, 60000);
+    </script>
+</body></html>

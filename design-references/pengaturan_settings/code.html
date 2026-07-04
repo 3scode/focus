@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TimeBlocking - Pengaturan</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#ffdbcc",
+                    "on-secondary-container": "#684000",
+                    "surface-container-low": "#f5f2ff",
+                    "on-background": "#1b1b24",
+                    "inverse-primary": "#c3c0ff",
+                    "inverse-on-surface": "#f3effc",
+                    "inverse-surface": "#302f39",
+                    "secondary-container": "#fea619",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "surface-container": "#f0ecf9",
+                    "surface-container-high": "#eae6f4",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "on-primary": "#ffffff",
+                    "surface": "#fcf8ff",
+                    "secondary": "#855300",
+                    "on-surface-variant": "#464555",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed-variant": "#3323cc",
+                    "primary-container": "#4f46e5",
+                    "on-primary-container": "#dad7ff",
+                    "surface-variant": "#e4e1ee",
+                    "outline": "#777587",
+                    "tertiary": "#7e3000",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-dim": "#dcd8e5",
+                    "surface-container-highest": "#e4e1ee",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-primary-fixed": "#0f0069",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#1b1b24",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#3525cd",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c7c4d8",
+                    "secondary-fixed": "#ffddb8",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#2a1700",
+                    "surface-tint": "#4d44e3",
+                    "surface-bright": "#fcf8ff",
+                    "on-tertiary-container": "#ffd2be",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "on-secondary": "#ffffff",
+                    "background": "#fcf8ff",
+                    "primary-fixed": "#e2dfff",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "tertiary-container": "#a44100"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "32px",
+                    "margin-mobile": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "xl": "32px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "h3": ["Inter"],
+                    "body": ["Inter"],
+                    "h2": ["Inter"],
+                    "h2-mobile": ["Inter"],
+                    "h1": ["Inter"],
+                    "h1-mobile": ["Inter"],
+                    "label": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h3": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h2-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h1-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "label": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            user-select: none;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcf8ff;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed h-full w-[280px] left-0 top-0 bg-surface-container-low dark:bg-surface-container-highest flex flex-col h-full py-xl px-lg hidden md:flex">
+<div class="mb-xl px-md">
+<h2 class="font-h2 text-h2 font-bold text-primary dark:text-inverse-primary tracking-tight">TimeBlocking</h2>
+<p class="font-label text-label text-on-surface-variant">Fokus &amp; Alur</p>
+</div>
+<nav class="flex flex-col gap-sm flex-grow">
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant hover:bg-primary-container/10 dark:hover:bg-primary-container/20 transition-colors p-md rounded-lg group" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body text-body">Hari Ini</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant hover:bg-primary-container/10 dark:hover:bg-primary-container/20 transition-colors p-md rounded-lg group" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-body text-body">Mingguan</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant hover:bg-primary-container/10 dark:hover:bg-primary-container/20 transition-colors p-md rounded-lg group" href="#">
+<span class="material-symbols-outlined">timer</span>
+<span class="font-body text-body">Timer</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant hover:bg-primary-container/10 dark:hover:bg-primary-container/20 transition-colors p-md rounded-lg group" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body text-body">Tinjauan</span>
+</a>
+<!-- Active State for Settings -->
+<a class="flex items-center gap-md text-primary dark:text-inverse-primary font-bold hover:bg-primary-container/10 dark:hover:bg-primary-container/20 transition-colors p-md rounded-lg group active:scale-[0.98] transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-body text-body">Pengaturan</span>
+</a>
+</nav>
+<div class="mt-auto px-md">
+<div class="flex items-center gap-md pt-lg border-t border-outline-variant/30">
+<div class="w-10 h-10 rounded-full bg-primary-fixed overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio headshot of a creative professional in their late 20s. The lighting is soft and warm, casting a gentle glow against a minimalist, high-key studio background. The style is clean and modern, reflecting a productivity-focused app aesthetic with neutral tones and a hint of indigo in the clothing to match the brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDbHkHMqD9gtxuh4msZpT07Ww-j6aoNGOR7wV9bWWqDbf8pqG2CJwhoZMHP1T6Xm8swL-cHFn3JXnHoBSd2X4Pohnz1-WbaZaoE0ZNVx3oPW2-2lsmG82IWZxszT5mXUCKDF8QYYibFbfdujKTEO7rQl6DwawFIRXppqu5BMudR-5s3rsDjTFv-G9wGdvRZOUHp7gWTjE5TPOKqoqu5HlzrlM_0yYvlhxDGxFaBtUBVTlPpVj3vnvO91RVGwb8ttMocS3BfpZ-d4ud"/>
+</div>
+<div class="flex flex-col">
+<span class="font-body text-body font-bold">Alex Rivers</span>
+<span class="font-label text-label text-on-surface-variant">Paket Pro</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation for Mobile -->
+<header class="flex justify-between items-center w-full h-16 px-margin-mobile md:px-margin-desktop ml-0 md:ml-[280px] max-w-[calc(100%-280px)] bg-surface/80 backdrop-blur-md fixed top-0 z-50 md:hidden">
+<h1 class="font-h1-mobile text-h1-mobile text-primary font-bold">Pengaturan</h1>
+<div class="flex gap-md">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-0 md:ml-[280px] min-h-screen p-margin-mobile md:p-margin-desktop pt-24 md:pt-margin-desktop">
+<div class="max-w-4xl mx-auto space-y-xl">
+<header class="hidden md:block mb-xl">
+<h1 class="font-h1 text-h1 text-on-background">Preferensi Aplikasi</h1>
+<p class="font-body text-body text-on-surface-variant mt-xs">Personalisasi pengalaman dan alur kerja TimeBlocking Anda.</p>
+</header>
+<!-- Section 1: Categories -->
+<section class="space-y-md">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-h2 text-h2 text-on-background">Kategori</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Atur blok waktu Anda dengan label khusus.</p>
+</div>
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary rounded-lg font-label text-label hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Kategori Baru
+                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Work -->
+<div class="glass-card p-md rounded-xl flex items-center justify-between group">
+<div class="flex items-center gap-md">
+<div class="w-4 h-4 rounded-full bg-primary ring-4 ring-primary/10"></div>
+<span class="font-body text-body font-bold">Kerja</span>
+</div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<!-- Personal -->
+<div class="glass-card p-md rounded-xl flex items-center justify-between group">
+<div class="flex items-center gap-md">
+<div class="w-4 h-4 rounded-full bg-secondary-container ring-4 ring-secondary-container/10"></div>
+<span class="font-body text-body font-bold">Pribadi</span>
+</div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<!-- Focus -->
+<div class="glass-card p-md rounded-xl flex items-center justify-between group">
+<div class="flex items-center gap-md">
+<div class="w-4 h-4 rounded-full bg-tertiary-container ring-4 ring-tertiary-container/10"></div>
+<span class="font-body text-body font-bold">Fokus</span>
+</div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<!-- Health -->
+<div class="glass-card p-md rounded-xl flex items-center justify-between group">
+<div class="flex items-center gap-md">
+<div class="w-4 h-4 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10"></div>
+<span class="font-body text-body font-bold">Kesehatan</span>
+</div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<!-- Learning -->
+<div class="glass-card p-md rounded-xl flex items-center justify-between group">
+<div class="flex items-center gap-md">
+<div class="w-4 h-4 rounded-full bg-indigo-400 ring-4 ring-indigo-400/10"></div>
+<span class="font-body text-body font-bold">Belajar</span>
+</div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<!-- Admin -->
+<div class="glass-card p-md rounded-xl flex items-center justify-between group">
+<div class="flex items-center gap-md">
+<div class="w-4 h-4 rounded-full bg-slate-400 ring-4 ring-slate-400/10"></div>
+<span class="font-body text-body font-bold">Admin</span>
+</div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Section 2: Preferences -->
+<section class="space-y-md">
+<div>
+<h2 class="font-h2 text-h2 text-on-background">Preferensi</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Konfigurasikan ritme harian dan perilaku bawaan Anda.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<div class="glass-card p-lg rounded-xl space-y-sm">
+<label class="font-label text-label text-on-surface-variant uppercase">Mulai Hari</label>
+<div class="flex items-center justify-between">
+<span class="font-h3 text-h3">08:00</span>
+<span class="material-symbols-outlined text-outline">schedule</span>
+</div>
+</div>
+<div class="glass-card p-lg rounded-xl space-y-sm">
+<label class="font-label text-label text-on-surface-variant uppercase">Akhir Hari</label>
+<div class="flex items-center justify-between">
+<span class="font-h3 text-h3">18:00</span>
+<span class="material-symbols-outlined text-outline">bedtime</span>
+</div>
+</div>
+<div class="glass-card p-lg rounded-xl space-y-sm">
+<label class="font-label text-label text-on-surface-variant uppercase">Timer Bawaan</label>
+<div class="flex items-center justify-between">
+<span class="font-h3 text-h3">25 menit</span>
+<span class="material-symbols-outlined text-outline">timer_10</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3 & 4 Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<!-- Appearance -->
+<section class="space-y-md">
+<div>
+<h2 class="font-h2 text-h2 text-on-background">Tampilan</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Beralih antara mode terang dan gelap.</p>
+</div>
+<div class="glass-card p-md rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="p-sm bg-surface-container rounded-lg">
+<span class="material-symbols-outlined text-primary">light_mode</span>
+</div>
+<span class="font-body text-body font-bold">Mode Tema</span>
+</div>
+<button class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-primary-container/30" onclick="document.documentElement.classList.toggle('dark')">
+<span class="sr-only">Toggle tema</span>
+<span aria-hidden="true" class="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-primary shadow ring-0 transition duration-200 ease-in-out"></span>
+</button>
+</div>
+</section>
+<!-- Data -->
+<section class="space-y-md">
+<div>
+<h2 class="font-h2 text-h2 text-on-background">Manajemen Data</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Kontrol privasi dan penyimpanan lokal Anda.</p>
+</div>
+<div class="space-y-sm">
+<button class="w-full flex items-center justify-between p-md glass-card rounded-xl hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-outline">file_download</span>
+<span class="font-body text-body">Ekspor JSON</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md border border-error/20 bg-error/5 rounded-xl hover:bg-error/10 transition-colors group">
+<div class="flex items-center gap-md text-error">
+<span class="material-symbols-outlined">delete_forever</span>
+<span class="font-body text-body font-bold">Hapus Semua Data</span>
+</div>
+</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Bottom Nav for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/90 backdrop-blur-md flex items-center justify-around border-t border-outline-variant/20 z-50">
+<button class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-[10px] font-label">Hari Ini</span>
+</button>
+<button class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px] font-label">Mingguan</span>
+</button>
+<button class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">timer</span>
+<span class="text-[10px] font-label">Timer</span>
+</button>
+<button class="flex flex-col items-center gap-xs text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-[10px] font-label">Pengaturan</span>
+</button>
+</nav>
+<script>
+        // Toggle Switch Animation
+        const toggleBtn = document.querySelector('button[onclick*="toggle"]');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                const circle = toggleBtn.querySelector('span:not(.sr-only)');
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    circle.style.transform = 'translateX(20px)';
+                    toggleBtn.classList.add('bg-primary');
+                } else {
+                    circle.style.transform = 'translateX(0px)';
+                    toggleBtn.classList.remove('bg-primary');
+                }
+            });
+        }
+
+        // Add visual feedback for clicks
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.classList.add('scale-[0.98]');
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.classList.remove('scale-[0.98]');
+            });
+        });
+    </script>
+</body></html>

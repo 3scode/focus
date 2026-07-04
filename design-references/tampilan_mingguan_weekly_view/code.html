@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for focus flow */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "tertiary-fixed": "#ffdbcc",
+                "on-secondary-container": "#684000",
+                "surface-container-low": "#f5f2ff",
+                "on-background": "#1b1b24",
+                "inverse-primary": "#c3c0ff",
+                "inverse-on-surface": "#f3effc",
+                "inverse-surface": "#302f39",
+                "secondary-container": "#fea619",
+                "on-secondary-fixed-variant": "#653e00",
+                "surface-container": "#f0ecf9",
+                "surface-container-high": "#eae6f4",
+                "on-error": "#ffffff",
+                "primary-fixed-dim": "#c3c0ff",
+                "on-primary": "#ffffff",
+                "surface": "#fcf8ff",
+                "secondary": "#855300",
+                "on-surface-variant": "#464555",
+                "on-error-container": "#93000a",
+                "on-primary-fixed-variant": "#3323cc",
+                "primary-container": "#4f46e5",
+                "on-primary-container": "#dad7ff",
+                "surface-variant": "#e4e1ee",
+                "outline": "#777587",
+                "tertiary": "#7e3000",
+                "on-tertiary-fixed": "#351000",
+                "surface-dim": "#dcd8e5",
+                "surface-container-highest": "#e4e1ee",
+                "secondary-fixed-dim": "#ffb95f",
+                "on-primary-fixed": "#0f0069",
+                "error-container": "#ffdad6",
+                "on-surface": "#1b1b24",
+                "surface-container-lowest": "#ffffff",
+                "primary": "#3525cd",
+                "error": "#ba1a1a",
+                "outline-variant": "#c7c4d8",
+                "secondary-fixed": "#ffddb8",
+                "on-tertiary": "#ffffff",
+                "on-secondary-fixed": "#2a1700",
+                "surface-tint": "#4d44e3",
+                "surface-bright": "#fcf8ff",
+                "on-tertiary-container": "#ffd2be",
+                "tertiary-fixed-dim": "#ffb695",
+                "on-secondary": "#ffffff",
+                "background": "#fcf8ff",
+                "primary-fixed": "#e2dfff",
+                "on-tertiary-fixed-variant": "#7b2f00",
+                "tertiary-container": "#a44100"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "margin-desktop": "32px",
+                "margin-mobile": "16px",
+                "sm": "8px",
+                "lg": "24px",
+                "xl": "32px",
+                "gutter": "16px",
+                "md": "16px",
+                "xs": "4px"
+              },
+              "fontFamily": {
+                "h3": ["Inter"],
+                "body": ["Inter"],
+                "h2": ["Inter"],
+                "h2-mobile": ["Inter"],
+                "h1": ["Inter"],
+                "h1-mobile": ["Inter"],
+                "label": ["Inter"],
+                "body-sm": ["Inter"]
+              },
+              "fontSize": {
+                "h3": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                "body": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                "h2-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "h1-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                "label": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body overflow-hidden">
+<!-- SideNavBar Integration -->
+<aside class="fixed h-full w-[280px] left-0 top-0 bg-surface-container-low flex flex-col py-xl px-lg z-50">
+<div class="mb-xl px-xs">
+<h1 class="font-h2 text-h2 font-bold text-primary tracking-tight">TimeBlocking</h1>
+<p class="font-label text-label text-on-surface-variant">Fokus &amp; Alur</p>
+</div>
+<button class="mb-xl bg-primary-container text-on-primary-container px-lg py-sm rounded-lg font-h3 flex items-center justify-center gap-sm transition-transform active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+            Tugas Baru
+        </button>
+<nav class="flex flex-col gap-sm flex-grow">
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-primary-container/10 transition-colors p-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-body text-body">Hari Ini</span>
+</a>
+<a class="flex items-center gap-md text-primary font-bold hover:bg-primary-container/10 transition-colors p-sm rounded-lg active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="font-body text-body">Mingguan</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-primary-container/10 transition-colors p-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+<span class="font-body text-body">Timer</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-primary-container/10 transition-colors p-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body text-body">Tinjauan</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-lg flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</div>
+<div class="flex-grow">
+<p class="font-label text-label text-on-surface font-bold">Alex Chen</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Paket Pro</p>
+</div>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-[280px] h-screen flex flex-col relative overflow-y-auto">
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center w-full h-16 px-margin-desktop bg-surface/80 backdrop-blur-md sticky top-0 z-40">
+<div class="flex items-center gap-lg">
+<h2 class="font-h1 text-h1 text-on-surface">Maret 2025</h2>
+<div class="flex items-center gap-xs bg-surface-container-high rounded-lg p-xs">
+<button class="p-xs hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span></button>
+<button class="px-sm font-label text-label hover:text-primary transition-colors">Hari Ini</button>
+<button class="p-xs hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span></button>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-sm text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Weekly Grid -->
+<section class="p-margin-desktop flex-grow">
+<div class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-7 gap-md">
+<!-- Day Card: Mon 10 (Today) -->
+<div class="bg-surface-container-lowest border-2 border-primary-container rounded-xl p-lg flex flex-col gap-md shadow-sm relative overflow-hidden transition-all hover:translate-y-[-2px]">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-label text-primary">SEN</p>
+<p class="font-h2 text-h2 font-extrabold text-on-surface">10</p>
+</div>
+<span class="bg-primary text-white text-[10px] px-sm py-[2px] rounded-full font-bold uppercase">Hari Ini</span>
+</div>
+<div class="flex flex-wrap gap-xs">
+<div class="w-3 h-3 rounded-full bg-primary" title="Kerja Mendalam"></div>
+<div class="w-3 h-3 rounded-full bg-secondary" title="Rapat"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary" title="Pribadi"></div>
+<div class="w-3 h-3 rounded-full bg-primary/40" title="Direncanakan"></div>
+<div class="w-3 h-3 rounded-full bg-secondary/40" title="Direncanakan"></div>
+<div class="w-3 h-3 rounded-full bg-primary/40" title="Direncanakan"></div>
+</div>
+<div class="mt-auto">
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden mb-xs">
+<div class="bg-primary h-full w-[66%]"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-bold">4/6 tugas</p>
+</div>
+</div>
+<!-- Day Card: Tue 11 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md transition-all hover:border-primary-container/40">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-label text-on-surface-variant">SEL</p>
+<p class="font-h2 text-h2 font-extrabold text-on-surface">11</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-xs">
+<div class="w-3 h-3 rounded-full bg-primary" title="Kerja Mendalam"></div>
+<div class="w-3 h-3 rounded-full bg-primary" title="Kerja Mendalam"></div>
+<div class="w-3 h-3 rounded-full bg-secondary" title="Rapat"></div>
+<div class="w-3 h-3 rounded-full bg-secondary" title="Rapat"></div>
+</div>
+<div class="mt-auto">
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden mb-xs">
+<div class="bg-secondary h-full w-[100%]"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">4/4 tugas</p>
+</div>
+</div>
+<!-- Day Card: Wed 12 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md transition-all hover:border-primary-container/40">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-label text-on-surface-variant">RAB</p>
+<p class="font-h2 text-h2 font-extrabold text-on-surface">12</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-xs">
+<div class="w-3 h-3 rounded-full bg-tertiary" title="Pribadi"></div>
+<div class="w-3 h-3 rounded-full bg-primary" title="Kerja Mendalam"></div>
+</div>
+<div class="mt-auto">
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden mb-xs">
+<div class="bg-primary h-full w-[20%]"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">1/5 tugas</p>
+</div>
+</div>
+<!-- Day Card: Thu 13 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md transition-all hover:border-primary-container/40">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-label text-on-surface-variant">KAM</p>
+<p class="font-h2 text-h2 font-extrabold text-on-surface">13</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-xs">
+<div class="w-3 h-3 rounded-full bg-primary" title="Kerja Mendalam"></div>
+<div class="w-3 h-3 rounded-full bg-primary" title="Kerja Mendalam"></div>
+<div class="w-3 h-3 rounded-full bg-primary" title="Kerja Mendalam"></div>
+<div class="w-3 h-3 rounded-full bg-secondary" title="Rapat"></div>
+</div>
+<div class="mt-auto">
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden mb-xs">
+<div class="bg-primary h-full w-[0%]"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">0/4 tugas</p>
+</div>
+</div>
+<!-- Day Card: Fri 14 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md transition-all hover:border-primary-container/40">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-label text-on-surface-variant">JUM</p>
+<p class="font-h2 text-h2 font-extrabold text-on-surface">14</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-xs">
+<div class="w-3 h-3 rounded-full bg-secondary" title="Rapat"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary" title="Pribadi"></div>
+</div>
+<div class="mt-auto">
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden mb-xs">
+<div class="bg-primary h-full w-[0%]"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">0/2 tugas</p>
+</div>
+</div>
+<!-- Empty Day: Sat 15 -->
+<div class="bg-surface-container-low border-2 border-dashed border-outline-variant rounded-xl p-lg flex flex-col items-center justify-center text-center opacity-60">
+<p class="font-label text-label text-on-surface-variant">SAB</p>
+<p class="font-h2 text-h2 font-extrabold text-on-surface-variant">15</p>
+<p class="font-body-sm text-body-sm mt-md">Hari Istirahat</p>
+</div>
+<!-- Empty Day: Sun 16 -->
+<div class="bg-surface-container-low border-2 border-dashed border-outline-variant rounded-xl p-lg flex flex-col items-center justify-center text-center opacity-60">
+<p class="font-label text-label text-on-surface-variant">MIN</p>
+<p class="font-h2 text-h2 font-extrabold text-on-surface-variant">16</p>
+<p class="font-body-sm text-body-sm mt-md">Hari Istirahat</p>
+</div>
+</div>
+<!-- Focus Insights Bento Card -->
+<div class="mt-xl grid grid-cols-1 md:grid-cols-12 gap-md">
+<div class="md:col-span-8 bg-on-background rounded-2xl p-xl text-white relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-lg opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<h3 class="font-h2 text-h2 mb-md">Momentum Kerja Mendalam</h3>
+<p class="font-body text-body text-surface-variant mb-xl max-w-lg">
+                        Anda telah menyelesaikan 72% dari sesi kerja mendalam yang direncanakan minggu ini. Hari Kamis terlihat padat—coba pindahkan tugas administratif Anda ke Jumat sore untuk menjaga alur fokus Anda.
+                    </p>
+<button class="bg-primary text-white px-lg py-sm rounded-lg font-label text-label flex items-center gap-sm">
+                        Lihat Wawasan Detail
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="md:col-span-4 bg-secondary-fixed rounded-2xl p-xl flex flex-col">
+<div class="mb-auto">
+<span class="material-symbols-outlined text-on-secondary-fixed text-4xl mb-md" data-icon="bolt">bolt</span>
+<h4 class="font-h3 text-h3 text-on-secondary-fixed">Puncak Produktivitas</h4>
+<p class="font-body text-body text-on-secondary-fixed-variant">10:00 — 12:30</p>
+</div>
+<div class="mt-xl">
+<p class="font-label text-label text-on-secondary-fixed-variant uppercase tracking-widest opacity-70">Kategori Utama</p>
+<p class="font-h2 text-h2 font-bold text-on-secondary-fixed">Teknik</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Weekly Stats Bar -->
+<footer class="sticky bottom-0 bg-surface-container-lowest border-t border-outline-variant px-margin-desktop py-lg flex flex-wrap items-center justify-between gap-lg z-30">
+<div class="flex items-center gap-xl">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="task_alt">task_alt</span>
+</div>
+<div>
+<p class="font-label text-label text-on-surface-variant">Total Blok</p>
+<p class="font-h3 text-h3">32</p>
+</div>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="schedule">schedule</span>
+</div>
+<div>
+<p class="font-label text-label text-on-surface-variant">Waktu Fokus</p>
+<p class="font-h3 text-h3">14j 20m</p>
+</div>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="trending_up">trending_up</span>
+</div>
+<div>
+<p class="font-label text-label text-on-surface-variant">Efisiensi</p>
+<p class="font-h3 text-h3">84%</p>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="text-right">
+<p class="font-label text-label text-on-surface-variant">Penyelesaian Mingguan</p>
+<p class="font-body-sm text-body-sm text-primary font-bold">Maju menuju target</p>
+</div>
+<div class="relative w-32 h-12 flex items-center justify-center">
+<!-- Mini sparkline simulation -->
+<svg class="w-full h-full stroke-primary fill-none stroke-2" viewbox="0 0 100 30">
+<path d="M0,25 L15,10 L30,20 L45,5 L60,15 L75,10 L90,12 L100,20"></path>
+</svg>
+</div>
+</div>
+</footer>
+</main>
+<!-- FAB for quick task (Contextual suppression check: Not suppressed on Weekly View) -->
+<button class="fixed bottom-margin-desktop right-margin-desktop bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-3xl" data-icon="edit">edit</span>
+</button>
+</body></html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TimeBlocking - Buat Blok Baru</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#ffdbcc",
+                    "on-secondary-container": "#684000",
+                    "surface-container-low": "#f5f2ff",
+                    "on-background": "#1b1b24",
+                    "inverse-primary": "#c3c0ff",
+                    "inverse-on-surface": "#f3effc",
+                    "inverse-surface": "#302f39",
+                    "secondary-container": "#fea619",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "surface-container": "#f0ecf9",
+                    "surface-container-high": "#eae6f4",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "on-primary": "#ffffff",
+                    "surface": "#fcf8ff",
+                    "secondary": "#855300",
+                    "on-surface-variant": "#464555",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed-variant": "#3323cc",
+                    "primary-container": "#4f46e5",
+                    "on-primary-container": "#dad7ff",
+                    "surface-variant": "#e4e1ee",
+                    "outline": "#777587",
+                    "tertiary": "#7e3000",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-dim": "#dcd8e5",
+                    "surface-container-highest": "#e4e1ee",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-primary-fixed": "#0f0069",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#1b1b24",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#3525cd",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c7c4d8",
+                    "secondary-fixed": "#ffddb8",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#2a1700",
+                    "surface-tint": "#4d44e3",
+                    "surface-bright": "#fcf8ff",
+                    "on-tertiary-container": "#ffd2be",
+                    "tertiary-fixed-dim": "#ffb695",
+                    "on-secondary": "#ffffff",
+                    "background": "#fcf8ff",
+                    "primary-fixed": "#e2dfff",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "tertiary-container": "#a44100"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "32px",
+                    "margin-mobile": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "xl": "32px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "h3": ["Inter"],
+                    "body": ["Inter"],
+                    "h2": ["Inter"],
+                    "h2-mobile": ["Inter"],
+                    "h1": ["Inter"],
+                    "h1-mobile": ["Inter"],
+                    "label": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h3": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h2-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h1-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "label": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .backdrop-blur-custom {
+            backdrop-filter: blur(8px);
+            background-color: rgba(27, 27, 36, 0.2);
+        }
+        .custom-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- Blurred Background Mockup of "Today View" -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none select-none opacity-40">
+<!-- Sidebar Shell -->
+<aside class="fixed h-full w-[280px] left-0 top-0 bg-surface-container-low flex flex-col py-xl px-lg">
+<div class="font-h2 text-h2 font-bold text-primary tracking-tight mb-xl">TimeBlocking</div>
+<nav class="space-y-md">
+<div class="flex items-center gap-md text-primary font-bold"><span class="material-symbols-outlined">calendar_today</span>Hari Ini</div>
+<div class="flex items-center gap-md text-on-surface-variant"><span class="material-symbols-outlined">grid_view</span>Mingguan</div>
+<div class="flex items-center gap-md text-on-surface-variant"><span class="material-symbols-outlined">timer</span>Timer</div>
+</nav>
+</aside>
+<!-- Content Canvas Mock -->
+<main class="ml-[280px] p-margin-desktop space-y-lg">
+<div class="h-10 w-48 bg-surface-variant rounded-lg"></div>
+<div class="grid grid-cols-1 gap-md">
+<div class="h-32 bg-surface-container-high rounded-xl border-l-4 border-primary"></div>
+<div class="h-32 bg-surface-container-high rounded-xl border-l-4 border-secondary"></div>
+<div class="h-32 bg-surface-container-high rounded-xl border-l-4 border-tertiary"></div>
+</div>
+</main>
+</div>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-margin-mobile backdrop-blur-custom">
+<!-- Create/Edit Block Modal -->
+<div class="bg-surface-container-lowest w-full max-w-[520px] rounded-xl custom-shadow overflow-hidden transform transition-all animate-in fade-in zoom-in duration-300">
+<!-- Modal Header -->
+<div class="px-xl pt-xl pb-md flex justify-between items-center">
+<h2 class="font-h2 text-h2 text-on-surface">Buat Blok Baru</h2>
+<button class="p-xs hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="px-xl pb-xl space-y-lg">
+<!-- Title Field -->
+<div class="space-y-xs">
+<label class="font-label text-label text-on-surface-variant uppercase tracking-wider">Apa yang sedang Anda kerjakan?</label>
+<input class="w-full h-[44px] px-md rounded-lg border border-outline-variant bg-surface focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-body" placeholder="misal, Perencanaan Strategi Q3" type="text"/>
+</div>
+<!-- Time Row -->
+<div class="grid grid-cols-2 gap-lg">
+<div class="space-y-xs">
+<label class="font-label text-label text-on-surface-variant uppercase tracking-wider">Waktu Mulai</label>
+<div class="relative">
+<input class="w-full h-[44px] pl-xl pr-md rounded-lg border border-outline-variant bg-surface focus:outline-none focus:border-primary transition-all text-body" type="text" value="09:00"/>
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">schedule</span>
+</div>
+</div>
+<div class="space-y-xs">
+<label class="font-label text-label text-on-surface-variant uppercase tracking-wider">Waktu Selesai</label>
+<div class="relative">
+<input class="w-full h-[44px] pl-xl pr-md rounded-lg border border-outline-variant bg-surface focus:outline-none focus:border-primary transition-all text-body" type="text" value="10:00"/>
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">schedule</span>
+</div>
+</div>
+</div>
+<!-- Category Chips -->
+<div class="space-y-md">
+<label class="font-label text-label text-on-surface-variant uppercase tracking-wider">Kategori</label>
+<div class="flex flex-wrap gap-sm">
+<!-- Selected: Work -->
+<button class="flex items-center gap-xs px-md py-sm rounded-full bg-primary text-on-primary font-label transition-all transform active:scale-95">
+<span class="w-2 h-2 rounded-full bg-white"></span>
+                            Pekerjaan
+                        </button>
+<!-- Other chips -->
+<button class="flex items-center gap-xs px-md py-sm rounded-full bg-surface-container-high text-on-surface font-label hover:bg-surface-variant transition-all">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                            Pribadi
+                        </button>
+<button class="flex items-center gap-xs px-md py-sm rounded-full bg-surface-container-high text-on-surface font-label hover:bg-surface-variant transition-all">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            Kesehatan
+                        </button>
+<button class="flex items-center gap-xs px-md py-sm rounded-full bg-surface-container-high text-on-surface font-label hover:bg-surface-variant transition-all">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                            Belajar
+                        </button>
+<button class="flex items-center gap-xs px-md py-sm rounded-full bg-surface-container-high text-on-surface font-label hover:bg-surface-variant transition-all">
+<span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                            Istirahat
+                        </button>
+<button class="flex items-center gap-xs px-md py-sm rounded-full bg-surface-container-high text-on-surface font-label hover:bg-surface-variant transition-all">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                            Lainnya
+                        </button>
+</div>
+</div>
+<!-- Toggles -->
+<div class="space-y-md pt-xs">
+<div class="flex items-center justify-between p-md bg-surface rounded-lg border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">timer</span>
+<div>
+<div class="font-body font-semibold text-on-surface">Mulai Timer Fokus</div>
+<div class="text-body-sm text-on-surface-variant">Mulai hitung mundur sesi secara otomatis</div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-md bg-surface rounded-lg border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary">do_not_disturb_on</span>
+<div>
+<div class="font-body font-semibold text-on-surface">Blokir Gangguan</div>
+<div class="text-body-sm text-on-surface-variant">Senyapkan notifikasi selama blok ini berlangsung</div>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Conflict Warning -->
+<div class="flex items-center gap-sm p-md bg-error-container text-on-error-container rounded-lg animate-pulse">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+<span class="text-body-sm font-semibold">Waktu bentrok dengan 'Sinkronisasi Mingguan'</span>
+</div>
+<!-- Action Button -->
+<button class="w-full h-12 bg-primary text-on-primary rounded-lg font-h3 flex items-center justify-center gap-sm hover:brightness-110 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">add_task</span>
+                    Simpan Blok
+                </button>
+</div>
+</div>
+</div>
+<!-- Micro-interaction script -->
+<script>
+        // Simple toggle simulation for demo
+        document.querySelectorAll('input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const parent = e.target.closest('div.flex');
+                if (e.target.checked) {
+                    parent.classList.add('border-primary/50');
+                } else {
+                    parent.classList.remove('border-primary/50');
+                }
+            });
+        });
+
+        // Category selection simulation
+        const chips = document.querySelectorAll('.flex.flex-wrap button');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => {
+                    c.classList.remove('bg-primary', 'text-on-primary');
+                    c.classList.add('bg-surface-container-high', 'text-on-surface');
+                    c.querySelector('span').classList.remove('bg-white');
+                });
+                chip.classList.remove('bg-surface-container-high', 'text-on-surface');
+                chip.classList.add('bg-primary', 'text-on-primary');
+                chip.querySelector('span').classList.add('bg-white');
+            });
+        });
+    </script>
+</body></html>
