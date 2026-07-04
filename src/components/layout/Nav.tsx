@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { CalendarDays, LayoutGrid, Timer, BarChart3, Settings, LogOut, User } from "lucide-react"
+import { CalendarDays, LayoutGrid, Timer, BarChart3, Settings, LogOut, User, Clock } from "lucide-react"
 import { useAuth } from "@/store/auth"
 
 const links = [
@@ -19,7 +19,7 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex flex-col w-56 h-screen bg-surface border-r border-border p-4 shrink-0">
-      <Link href="/" className="text-lg font-bold mb-8 px-3 block">TimeBlock</Link>
+      <Link href="/" className="flex items-center gap-2 text-lg font-bold mb-8 px-3 block"><Clock className="w-5 h-5" />TimeBlock</Link>
       <nav className="flex flex-col gap-1">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href

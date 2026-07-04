@@ -1,14 +1,22 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/store/auth"
-import { CalendarDays, LayoutGrid, Timer, BarChart3, ArrowRight, Clock, Target, CheckCircle2 } from "lucide-react"
+import { useApp } from "@/store"
+import { CalendarDays, LayoutGrid, Timer, BarChart3, ArrowRight, Clock, Target, CheckCircle2, Moon, Sun } from "lucide-react"
 
 export default function HomePage() {
   const router = useRouter()
   const { user, loading } = useAuth()
+  const { settings, updateSettings } = useApp()
+
+  const toggleTheme = useCallback(() => {
+    const next = settings?.theme === "dark" ? "light" : "dark"
+    if (updateSettings) updateSettings({ ...settings, theme: next })
+    document.documentElement.classList.toggle("dark", next === "dark")
+  }, [settings, updateSettings])
 
   useEffect(() => {
     if (!loading && user) {
@@ -37,7 +45,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-4xl mx-auto flex items-center justify-between px-4 h-14">
-          <h1 className="text-lg font-bold">TimeBlock</h1>
+          <h1 className="text-lg font-bold flex items-center gap-2"><Clock className="w-5 h-5" />TimeBlock</h1>
           <div className="flex items-center gap-2">
             <Link
               href="/sign-in"
@@ -51,6 +59,13 @@ export default function HomePage() {
             >
               Daftar
             </Link>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-text-secondary hover:bg-border hover:text-text-primary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {settings?.theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
           </div>
         </div>
       </header>
@@ -102,7 +117,7 @@ export default function HomePage() {
       </main>
 
       <footer className="border-t border-border py-6 text-center text-caption text-text-secondary">
-        TimeBlock &copy; {new Date().getFullYear()}
+        &copy; Created By Trisno Sanjaya
       </footer>
     </div>
   )
