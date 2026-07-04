@@ -7,6 +7,7 @@ export interface Block {
   categoryId: string
   color?: string
   completed: boolean
+  missed?: boolean
   focusSessions: FocusSession[]
   createdAt: string
   updatedAt: string

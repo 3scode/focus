@@ -22,6 +22,7 @@ interface AppContextValue extends AppState {
   removeBlock: (id: string) => Promise<void>
   removeRecurringSeries: (groupId: string) => Promise<void>
   toggleBlockComplete: (id: string) => Promise<void>
+  toggleBlockMissed: (id: string) => Promise<void>
   updateCategories: (cats: Category[]) => Promise<void>
   updateSettings: (settings: Settings) => Promise<void>
   addFocusSession: (session: FocusSession) => Promise<void>
@@ -87,6 +88,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const block = blocksList.find((b) => b.id === id)
     if (!block) return
     block.completed = !block.completed
+    if (block.completed) block.missed = false
+    block.updatedAt = new Date().toISOString()
+    await storage.saveBlock(block)
+    setBlocks((prev) => prev.map((b) => (b.id === id ? block : b)))
+  }, [])
+
+  const toggleBlockMissed = useCallback(async (id: string) => {
+    const blocksList = await storage.getBlocks()
+    const block = blocksList.find((b) => b.id === id)
+    if (!block) return
+    block.missed = !block.missed
+    if (block.missed) block.completed = false
     block.updatedAt = new Date().toISOString()
     await storage.saveBlock(block)
     setBlocks((prev) => prev.map((b) => (b.id === id ? block : b)))
@@ -139,7 +152,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         blocks, categories, settings, selectedDate, loading,
         refresh, setSelectedDate, addBlock, updateBlock, removeBlock, removeRecurringSeries,
-        toggleBlockComplete, updateCategories, updateSettings,
+        toggleBlockComplete, toggleBlockMissed, updateCategories, updateSettings,
         addFocusSession, clearData,
         activeBlockId, setActiveBlockId,
       }}

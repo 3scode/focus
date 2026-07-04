@@ -1,11 +1,13 @@
 "use client"
 
-import { useMemo } from "react"
-import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react"
+import { useMemo, useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayCard } from "./DayCard"
 import { getWeekDays, isToday, format, formatDuration } from "@/lib/time"
 import type { Block } from "@/types"
 import type { Category } from "@/types"
+
+
 
 interface WeekGridProps {
   currentDate: Date
@@ -15,6 +17,13 @@ interface WeekGridProps {
   onNextWeek: () => void
   onToday: () => void
   onDayTap: (date: Date) => void
+  onToggleComplete: (id: string) => void
+  onToggleMissed: (id: string) => void
+}
+
+function parseTime(t: string) {
+  const [h, m] = t.split(":").map(Number)
+  return h * 60 + m
 }
 
 export function WeekGrid({
@@ -25,7 +34,10 @@ export function WeekGrid({
   onNextWeek,
   onToday,
   onDayTap,
+  onToggleComplete,
+  onToggleMissed,
 }: WeekGridProps) {
+  const [sortAsc, setSortAsc] = useState(true)
   const days = useMemo(() => getWeekDays(currentDate), [currentDate])
 
   const dayData = useMemo(() => {
@@ -100,33 +112,76 @@ export function WeekGrid({
 
       {totalBlocks > 0 && (
         <div className="mt-6 space-y-3">
-          <h3 className="text-sm font-semibold text-text-secondary">All Blocks This Week</h3>
-          <div className="space-y-2">
-            {dayData.flatMap((d) =>
-              d.blocks.map((block) => (
-                <div
-                  key={block.id}
-                  className={`
-                    p-3 rounded-radius-md cursor-pointer hover:brightness-95 transition-all
-                    ${block.completed ? "opacity-70" : ""}
-                  `}
-                  style={{ backgroundColor: block.color ?? categoryColors[block.categoryId] ?? "#6B7280", color: "white" }}
-                  onClick={() => onDayTap(d.date)}
-                >
-                  <div className="flex items-center gap-2 text-xs opacity-80">
-                    <span className="font-mono">{format(d.date, "EEE, MMM d")}</span>
-                    <span>•</span>
-                    <span className="font-mono">{block.startTime} — {block.endTime}</span>
-                    <span className="font-mono opacity-60">{formatDuration(block.startTime, block.endTime)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    {block.completed && <CheckCircle2 className="w-4 h-4" />}
-                    <div className={`font-medium ${block.completed ? "line-through" : ""}`}>{block.title}</div>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-text-secondary">All Blocks This Week</h3>
+            <button
+              onClick={() => setSortAsc(!sortAsc)}
+              className="px-2 py-1 text-xs rounded-md font-medium bg-primary text-white transition-colors"
+            >
+              Time {sortAsc ? "↑" : "↓"}
+            </button>
           </div>
+
+          {(() => {
+            const sorted = dayData.flatMap((d) =>
+              d.blocks.map((block) => ({ block, day: d.date }))
+            )
+            sorted.sort((a, b) => {
+              const diff = a.day.getTime() - b.day.getTime() || parseTime(a.block.startTime) - parseTime(b.block.startTime)
+              return sortAsc ? diff : -diff
+            })
+
+            return (
+              <div className="space-y-1">
+                {sorted.map(({ block, day }) => {
+                  const color = block.color ?? categoryColors[block.categoryId] ?? "#6B7280"
+                  const isMissed = block.missed && !block.completed
+                  return (
+                    <div
+                      key={block.id}
+                      className={`
+                        flex items-center gap-1.5 p-1.5 rounded-radius-md transition-all
+                        ${block.completed ? "opacity-70" : ""}
+                        ${isMissed ? "opacity-50" : ""}
+                      `}
+                      style={{ backgroundColor: color, color: "white" }}
+                    >
+                      {!block.completed && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onToggleMissed(block.id) }}
+                          className="shrink-0 text-sm leading-none"
+                          aria-label={isMissed ? "Mark pending" : "Mark missed"}
+                        >
+                          ✕
+                        </button>
+                      )}
+                      {!isMissed && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id) }}
+                          className="shrink-0 text-sm leading-none"
+                          aria-label={block.completed ? "Mark incomplete" : "Mark complete"}
+                        >
+                          ✓
+                        </button>
+                      )}
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => onDayTap(day)}
+                      >
+                        <div className="flex items-center gap-1 text-xs opacity-80">
+                          <span className="font-mono">{format(day, "EEE, MMM d")}</span>
+                          <span>•</span>
+                          <span className="font-mono">{block.startTime}—{block.endTime}</span>
+                          <span className="font-mono opacity-60">{formatDuration(block.startTime, block.endTime)}</span>
+                        </div>
+                        <div className={`text-xs font-medium truncate ${block.completed ? "line-through" : ""}`}>{block.title}</div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
         </div>
       )}
     </div>

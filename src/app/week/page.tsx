@@ -10,7 +10,7 @@ import { useApp } from "@/store"
 
 function WeekContent() {
   const router = useRouter()
-  const { blocks, categories, setSelectedDate } = useApp()
+  const { blocks, categories, setSelectedDate, toggleBlockComplete, toggleBlockMissed } = useApp()
   const [weekOffset, setWeekOffset] = useState(0)
   const [baseDate] = useState(new Date())
 
@@ -43,6 +43,8 @@ function WeekContent() {
             onNextWeek={handleNext}
             onToday={handleToday}
             onDayTap={handleDayTap}
+            onToggleComplete={toggleBlockComplete}
+            onToggleMissed={toggleBlockMissed}
           />
         </div>
       </main>
