@@ -6,7 +6,7 @@ import { Clock, Trash2, Repeat } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
 import type { Block, Category } from "@/types"
-import { calcDuration, calcEndTime, checkOverlap } from "@/lib/time"
+import { calcDuration, calcEndTime } from "@/lib/time"
 
 interface BlockFormProps {
   initialBlock?: Block | null
@@ -67,17 +67,6 @@ export function BlockForm({
     }
     if (duration < 15) {
       setError("Minimum duration is 15 minutes")
-      return
-    }
-
-    const overlap = existingBlocks.some(
-      (b) =>
-        b.id !== initialBlock?.id &&
-        b.date === selectedDate &&
-        checkOverlap(startTime, endTime, b.startTime, b.endTime)
-    )
-    if (overlap) {
-      setError("This time overlaps with another block")
       return
     }
 
