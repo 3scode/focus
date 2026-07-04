@@ -156,7 +156,12 @@ export function Timeline({
         top: (startMins - dayStartMinutes) * PX_PER_MIN,
         height: Math.max(duration * PX_PER_MIN, PX_PER_MIN * 30),
       }
-    }).sort((a, b) => a.startMins - b.startMins)
+    }).sort((a, b) => {
+      const durA = a.endMins - a.startMins
+      const durB = b.endMins - b.startMins
+      if (durA !== durB) return durA - durB
+      return a.startMins - b.startMins
+    })
 
     const columns: (typeof items[number])[][] = []
     for (const item of items) {
@@ -255,11 +260,12 @@ export function Timeline({
             key={block.id}
             className="absolute pointer-events-auto"
             style={{
-              top: `${top}px`,
-              height: `${height}px`,
-              left: `calc(56px + ${column / numColumns} * (100% - 64px))`,
-              width: `calc(${1 / numColumns} * (100% - 64px))`,
+              top: `${top + column * 6}px`,
+              height: `${Math.max(height - column * 6, PX_PER_MIN * 30)}px`,
+              left: `56px`,
+              width: `calc(100% - 64px)`,
               minHeight: `${PX_PER_MIN * 30}px`,
+              zIndex: 10 - column,
             }}
           >
             <DraggableBlock
