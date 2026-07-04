@@ -20,6 +20,12 @@ interface BlockFormProps {
   onDeleteSeries?: (groupId: string) => void
 }
 
+const COLOR_OPTIONS = [
+  "#3B82F6", "#10B981", "#F43F5E", "#8B5CF6",
+  "#F59E0B", "#6B7280", "#EF4444", "#22C55E",
+  "#14B8A6", "#6366F1", "#EC4899", "#F97316",
+]
+
 export function BlockForm({
   initialBlock,
   preselectedTime,
@@ -38,6 +44,7 @@ export function BlockForm({
   const [startTime, setStartTime] = useState(initialStart)
   const [endTime, setEndTime] = useState(initialEnd)
   const [categoryId, setCategoryId] = useState(initialBlock?.categoryId ?? categories[0]?.id ?? "other")
+  const [blockColor, setBlockColor] = useState(initialBlock?.color ?? "")
   const [isRecurring, setIsRecurring] = useState(initialBlock?.recurring ?? false)
   const [recurringPattern, setRecurringPattern] = useState(initialBlock?.recurringPattern ?? "daily")
   const [recurringEndDate, setRecurringEndDate] = useState(initialBlock?.recurringEndDate ?? "")
@@ -82,6 +89,7 @@ export function BlockForm({
       startTime,
       endTime,
       categoryId,
+      color: blockColor || undefined,
       completed: initialBlock?.completed ?? false,
       focusSessions: initialBlock?.focusSessions ?? [],
       createdAt: initialBlock?.createdAt ?? now,
@@ -179,6 +187,32 @@ export function BlockForm({
               </button>
             )
           })}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Color</label>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setBlockColor("")}
+            className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 flex items-center justify-center text-xs font-medium
+              ${!blockColor ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border"}`}
+            style={{ backgroundColor: "transparent" }}
+            title="Auto (category)"
+          >
+            <span className="text-text-secondary text-[10px] font-bold">A</span>
+          </button>
+          {COLOR_OPTIONS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setBlockColor(c)}
+              className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110
+                ${blockColor === c ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border"}`}
+              style={{ backgroundColor: c }}
+            />
+          ))}
         </div>
       </div>
 

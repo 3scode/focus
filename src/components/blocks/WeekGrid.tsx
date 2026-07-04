@@ -35,7 +35,7 @@ export function WeekGrid({
       const dayBlocks = blocks.filter((b) => b.date === dateStr)
       const total = dayBlocks.length
       const completed = dayBlocks.filter((b) => b.completed).length
-      const blockColors = dayBlocks.map((b) => catMap.get(b.categoryId) ?? "#6B7280")
+      const blockColors = dayBlocks.map((b) => b.color ?? catMap.get(b.categoryId) ?? "#6B7280")
       return {
         date: day,
         dayName: format(day, "EEE"),
@@ -110,7 +110,7 @@ export function WeekGrid({
                     p-3 rounded-radius-md cursor-pointer hover:brightness-95 transition-all
                     ${block.completed ? "opacity-70" : ""}
                   `}
-                  style={{ backgroundColor: categoryColors[block.categoryId] ?? "#6B7280", color: "white" }}
+                  style={{ backgroundColor: block.color ?? categoryColors[block.categoryId] ?? "#6B7280", color: "white" }}
                   onClick={() => onDayTap(d.date)}
                 >
                   <div className="flex items-center gap-2 text-xs opacity-80">

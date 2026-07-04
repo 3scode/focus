@@ -264,7 +264,7 @@ export function Timeline({
           >
             <DraggableBlock
               block={block}
-              categoryColor={categoryColors[block.categoryId] ?? "#6B7280"}
+              categoryColor={block.color ?? categoryColors[block.categoryId] ?? "#6B7280"}
               categoryName={categoryNames[block.categoryId] ?? "Other"}
               onTap={onBlockTap}
               onTimerClick={onTimerClick}

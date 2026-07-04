@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { v4 as uuidv4 } from "uuid"
-import { Trash2, Plus, Download, AlertTriangle } from "lucide-react"
+import { toast } from "sonner"
+import { Trash2, Plus, Download, Upload, AlertTriangle } from "lucide-react"
 import { AuthGuard } from "@/components/layout/AuthGuard"
 import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
@@ -50,7 +51,32 @@ function SettingsContent() {
     saveCats(localCats.filter((c) => c.id !== id))
   }, [localCats, saveCats])
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+
+  const handleImport = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      if (!data.categories || !data.settings) {
+        toast.error("Format file tidak valid")
+        return
+      }
+      await updateCategories(data.categories)
+      updateSettings(data.settings)
+      setLocalCats(data.categories)
+      toast.success("Data berhasil diimpor")
+    } catch {
+      toast.error("Gagal membaca file")
+    }
+    e.target.value = ""
+  }, [updateCategories, updateSettings])
 
   const handleExport = useCallback(() => {
     const data = { categories: localCats, settings }
@@ -201,6 +227,10 @@ function SettingsContent() {
           <section>
             <h2 className="text-sm font-semibold text-text-secondary mb-3">Data</h2>
             <div className="space-y-2">
+              <Button variant="secondary" className="w-full justify-start" onClick={handleImport}>
+                <Upload className="w-4 h-4" /> Import Data
+              </Button>
+              <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileChange} />
               <Button variant="secondary" className="w-full justify-start" onClick={handleExport}>
                 <Download className="w-4 h-4" /> Export Data
               </Button>

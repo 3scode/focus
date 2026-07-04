@@ -22,7 +22,7 @@ function TaskSelector({ onSelect }: { onSelect: (id: string) => void }) {
       .map((b) => ({
         ...b,
         categoryName: catMap.get(b.categoryId)?.name ?? "",
-        categoryColor: catMap.get(b.categoryId)?.color ?? "#6B7280",
+        categoryColor: b.color ?? catMap.get(b.categoryId)?.color ?? "#6B7280",
       }))
       .sort((a, b) => a.startTime.localeCompare(b.startTime))
   }, [blocks, categories, today])
@@ -83,7 +83,9 @@ function TimerContent() {
   const block = useMemo(() => blocks.find((b) => b.id === activeBlockId), [blocks, activeBlockId])
 
   const catMap = useMemo(() => new Map(categories.map((c) => [c.id, { name: c.name, color: c.color }])), [categories])
-  const blockCategory = block ? catMap.get(block.categoryId) : null
+  const blockCategory = block
+    ? { name: catMap.get(block.categoryId)?.name ?? "", color: block.color ?? catMap.get(block.categoryId)?.color ?? "#6B7280" }
+    : null
 
   const [phase, setPhase] = useState<Phase>("idle")
   const [focusMinutes, setFocusMinutes] = useState(0)
