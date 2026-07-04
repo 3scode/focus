@@ -36,7 +36,7 @@ export const TimeBlock = memo(function TimeBlock({
         cursor-pointer active:scale-[0.98]
         text-white
         ${block.completed ? "opacity-60" : ""}
-        ${compact ? "p-2" : ""}
+        ${compact ? "px-1.5 py-1" : ""}
       `}
       style={{
         borderLeftColor: categoryColor,
@@ -59,29 +59,55 @@ export const TimeBlock = memo(function TimeBlock({
       )}
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-time text-white/80 tabular-nums whitespace-nowrap">
-            {block.startTime} — {block.endTime}
-          </span>
-          <span className="font-mono text-caption text-white/60 tabular-nums">
-            {formatDuration(block.startTime, block.endTime)}
-          </span>
-          {block.completed && <CheckCircle2 className="w-3.5 h-3.5 text-white/90" />}
-          {!block.completed && onTimerClick && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onTimerClick(block.id) }}
-              className="p-0.5 rounded hover:bg-white/20 text-white/70 opacity-60 hover:opacity-100 transition-opacity"
-              aria-label="Start timer"
-            >
-              <Timer className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-        <p className={`text-sm font-medium text-white truncate ${block.completed ? "line-through" : ""}`}>
-          {block.title}
-        </p>
-        {!compact && (
-          <span className="text-caption text-white/70 capitalize">{categoryName}</span>
+        {compact ? (
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-mono text-time text-white/80 tabular-nums whitespace-nowrap shrink-0">
+              {block.startTime}—{block.endTime}
+            </span>
+            <span className="text-text-secondary/40 shrink-0">·</span>
+            <p className={`text-sm font-medium text-white truncate min-w-0 ${block.completed ? "line-through" : ""}`}>
+              {block.title}
+            </p>
+            <span className="font-mono text-caption text-white/60 tabular-nums shrink-0">
+              {formatDuration(block.startTime, block.endTime)}
+            </span>
+            {!block.completed && onTimerClick && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onTimerClick(block.id) }}
+                className="p-0.5 rounded hover:bg-white/20 text-white/70 opacity-60 hover:opacity-100 transition-colors shrink-0"
+                aria-label="Start timer"
+              >
+                <Timer className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-time text-white/80 tabular-nums whitespace-nowrap">
+                {block.startTime} — {block.endTime}
+              </span>
+              <span className="font-mono text-caption text-white/60 tabular-nums">
+                {formatDuration(block.startTime, block.endTime)}
+              </span>
+              {block.completed && <CheckCircle2 className="w-3.5 h-3.5 text-white/90" />}
+              {!block.completed && onTimerClick && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onTimerClick(block.id) }}
+                  className="p-0.5 rounded hover:bg-white/20 text-white/70 opacity-60 hover:opacity-100 transition-opacity"
+                  aria-label="Start timer"
+                >
+                  <Timer className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <p className={`text-sm font-medium text-white truncate ${block.completed ? "line-through" : ""}`}>
+              {block.title}
+            </p>
+            {!compact && (
+              <span className="text-caption text-white/70 capitalize">{categoryName}</span>
+            )}
+          </>
         )}
       </div>
     </div>

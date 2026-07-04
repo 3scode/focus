@@ -56,6 +56,7 @@ function DraggableBlock({
   onTap,
   onTimerClick,
   onDelete,
+  compact,
 }: {
   block: Block
   categoryColor: string
@@ -63,6 +64,7 @@ function DraggableBlock({
   onTap: (id: string) => void
   onTimerClick: (id: string) => void
   onDelete: (id: string) => void
+  compact?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: block.id,
@@ -120,6 +122,7 @@ function DraggableBlock({
           onTimerClick={onTimerClick}
           dragListeners={listeners}
           dragAttributes={attributes}
+          compact={compact}
         />
       </div>
     </div>
@@ -149,12 +152,15 @@ export function Timeline({
       const startMins = parseTime(block.startTime)
       const endMins = parseTime(block.endTime)
       const duration = endMins - startMins
+      const naturalHeight = Math.max(duration * PX_PER_MIN, 20)
       return {
         block,
         startMins,
         endMins,
+        duration,
+        naturalHeight,
         top: (startMins - dayStartMinutes) * PX_PER_MIN,
-        height: Math.max(duration * PX_PER_MIN, PX_PER_MIN * 30),
+        height: naturalHeight,
       }
     }).sort((a, b) => {
       const durA = a.endMins - a.startMins
@@ -255,16 +261,16 @@ export function Timeline({
           )
         })}
 
-        {blockLayout.map(({ block, top, height, column, numColumns }) => (
+        {blockLayout.map(({ block, top, height, column, numColumns, naturalHeight }) => (
           <div
             key={block.id}
             className="absolute pointer-events-auto"
             style={{
               top: `${top + column * 6}px`,
-              height: `${Math.max(height - column * 6, PX_PER_MIN * 30)}px`,
+              height: `${Math.max(height - column * 6, 28)}px`,
               left: `56px`,
               width: `calc(100% - 64px)`,
-              minHeight: `${PX_PER_MIN * 30}px`,
+              minHeight: `28px`,
               zIndex: 10 - column,
             }}
           >
@@ -275,6 +281,7 @@ export function Timeline({
               onTap={onBlockTap}
               onTimerClick={onTimerClick}
               onDelete={onDeleteBlock}
+              compact={naturalHeight < 40}
             />
           </div>
         ))}
