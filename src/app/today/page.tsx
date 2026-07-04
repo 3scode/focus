@@ -14,6 +14,7 @@ import { useApp } from "@/store"
 import { useBlocksByDate, useDailyProgress } from "@/hooks/useBlocks"
 import { formatDisplayDate, generateRecurringBlocks } from "@/lib/time"
 import type { Block } from "@/types"
+import * as storage from "@/lib/storage"
 
 function TodayContent() {
   const router = useRouter()
@@ -84,6 +85,19 @@ function TodayContent() {
   const handleSubmit = useCallback(async (block: Block) => {
     if (editBlock) {
       await updateBlock(block)
+      if (block.recurring && block.recurringGroupId) {
+        const allBlocks = await storage.getBlocks()
+        const oldSeries = allBlocks.filter((b) => b.recurringGroupId === block.recurringGroupId && b.id !== block.id)
+        for (const b of oldSeries) {
+          await removeBlock(b.id)
+        }
+        const generated = generateRecurringBlocks(block)
+        for (const b of generated) {
+          if (b.date !== block.date) {
+            await addBlock(b)
+          }
+        }
+      }
     } else {
       if (block.recurring) {
         await addBlock(block)
@@ -100,7 +114,7 @@ function TodayContent() {
     setShowForm(false)
     setEditBlock(null)
     setPreselectedTime(undefined)
-  }, [editBlock, addBlock, updateBlock])
+  }, [editBlock, addBlock, updateBlock, removeBlock])
 
   const goToDate = useCallback((date: string) => {
     setSelectedDate(date)
