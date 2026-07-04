@@ -86,9 +86,12 @@ function TodayContent() {
       await updateBlock(block)
     } else {
       if (block.recurring) {
-        const blocks = generateRecurringBlocks(block)
-        for (const b of blocks) {
-          await addBlock(b)
+        await addBlock(block)
+        const generated = generateRecurringBlocks(block)
+        for (const b of generated) {
+          if (b.date !== block.date) {
+            await addBlock(b)
+          }
         }
       } else {
         await addBlock(block)
