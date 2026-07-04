@@ -47,6 +47,7 @@ export function BlockForm({
   const [blockColor, setBlockColor] = useState(initialBlock?.color ?? "")
   const [isRecurring, setIsRecurring] = useState(initialBlock?.recurring ?? false)
   const [recurringPattern, setRecurringPattern] = useState(initialBlock?.recurringPattern ?? "daily")
+  const [recurringStartDate, setRecurringStartDate] = useState(initialBlock?.recurringStartDate ?? selectedDate)
   const [recurringEndDate, setRecurringEndDate] = useState(initialBlock?.recurringEndDate ?? "")
   const [error, setError] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -85,6 +86,7 @@ export function BlockForm({
       updatedAt: now,
       recurring: isRecurring,
       recurringPattern: isRecurring ? recurringPattern : undefined,
+      recurringStartDate: isRecurring ? recurringStartDate : undefined,
       recurringEndDate: isRecurring ? recurringEndDate : undefined,
       recurringGroupId: initialBlock?.recurringGroupId ?? (isRecurring ? uuidv4() : undefined),
     }
@@ -230,6 +232,15 @@ export function BlockForm({
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-xs text-text-secondary mb-1">Starting from</label>
+              <input
+                type="date"
+                value={recurringStartDate}
+                onChange={(e) => setRecurringStartDate(e.target.value)}
+                className="w-full px-2 py-1.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              />
             </div>
             <div>
               <label className="block text-xs text-text-secondary mb-1">Until</label>

@@ -13,6 +13,7 @@ export interface Block {
   updatedAt: string
   recurring?: boolean
   recurringPattern?: 'daily' | 'weekly' | 'monthly'
+  recurringStartDate?: string
   recurringEndDate?: string
   recurringGroupId?: string
 }

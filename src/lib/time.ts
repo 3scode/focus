@@ -70,7 +70,9 @@ export function generateRecurringBlocks(baseBlock: Block): Block[] {
   }
 
   const blocks: Block[] = []
-  const startDate = parseISO(baseBlock.date)
+  const startDate = baseBlock.recurringStartDate
+    ? parseISO(baseBlock.recurringStartDate)
+    : parseISO(baseBlock.date)
   
   const endDate = baseBlock.recurringEndDate 
     ? parseISO(baseBlock.recurringEndDate)
