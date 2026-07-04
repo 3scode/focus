@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
 import { useApp } from "@/store"
-import type { Category } from "@/types"
+import type { Block, Category, FocusSession } from "@/types"
+import * as storage from "@/lib/storage"
 
 const SWATCHES = [
   "#3B82F6", "#10B981", "#F43F5E", "#8B5CF6",
@@ -18,7 +19,7 @@ const SWATCHES = [
 ]
 
 function SettingsContent() {
-  const { categories, settings, updateCategories, updateSettings, clearData } = useApp()
+  const { blocks, categories, settings, updateCategories, updateSettings, clearData } = useApp()
   const [localCats, setLocalCats] = useState<Category[]>(categories)
   const [editingCat, setEditingCat] = useState<string | null>(null)
   const [pendingColor, setPendingColor] = useState<string | null>(null)
@@ -71,15 +72,23 @@ function SettingsContent() {
       await updateCategories(data.categories)
       updateSettings(data.settings)
       setLocalCats(data.categories)
+      if (data.blocks) {
+        await storage.setBlocks(data.blocks as Block[])
+      }
+      if (data.focusSessions) {
+        await storage.setFocusSessions(data.focusSessions as FocusSession[])
+      }
       toast.success("Data berhasil diimpor")
+      window.location.reload()
     } catch {
       toast.error("Gagal membaca file")
     }
     e.target.value = ""
   }, [updateCategories, updateSettings])
 
-  const handleExport = useCallback(() => {
-    const data = { categories: localCats, settings }
+  const handleExport = useCallback(async () => {
+    const focusSessions = await storage.getFocusSessions()
+    const data = { blocks, categories: localCats, focusSessions, settings }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -87,7 +96,7 @@ function SettingsContent() {
     a.download = "time-blocking-export.json"
     a.click()
     URL.revokeObjectURL(url)
-  }, [localCats, settings])
+  }, [blocks, localCats, settings])
 
   const handleClear = useCallback(async () => {
     await clearData()
