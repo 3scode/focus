@@ -1,7 +1,7 @@
 "use client"
 
-import { Suspense, useState, useMemo, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useMemo, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { addDays, subDays, format, parseISO } from "date-fns"
 import { AuthGuard } from "@/components/layout/AuthGuard"
@@ -17,11 +17,9 @@ import type { Block } from "@/types"
 
 function TodayContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { categories, settings, selectedDate, setSelectedDate, addBlock, updateBlock, removeBlock, removeRecurringSeries, setActiveBlockId } = useApp()
 
-  const dateParam = searchParams.get("date")
-  const currentDate = useMemo(() => dateParam ? format(parseISO(dateParam), "yyyy-MM-dd") : selectedDate, [dateParam, selectedDate])
+  const currentDate = selectedDate
 
   const blocks = useBlocksByDate(currentDate)
   const { total, completed, percentage } = useDailyProgress(currentDate)
@@ -103,8 +101,7 @@ function TodayContent() {
 
   const goToDate = useCallback((date: string) => {
     setSelectedDate(date)
-    router.push(`/today?date=${date}`)
-  }, [router, setSelectedDate])
+  }, [setSelectedDate])
 
   const prevDay = useCallback(() => {
     const prev = subDays(parseISO(currentDate), 1)
@@ -206,9 +203,7 @@ function TodayContent() {
 export default function TodayPage() {
   return (
     <AuthGuard>
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-text-secondary">Loading...</div>}>
-        <TodayContent />
-      </Suspense>
+      <TodayContent />
     </AuthGuard>
   )
 }
