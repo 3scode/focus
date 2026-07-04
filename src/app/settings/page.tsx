@@ -20,6 +20,7 @@ function SettingsContent() {
   const { categories, settings, updateCategories, updateSettings, clearData } = useApp()
   const [localCats, setLocalCats] = useState<Category[]>(categories)
   const [editingCat, setEditingCat] = useState<string | null>(null)
+  const [pendingColor, setPendingColor] = useState<string | null>(null)
 
   const saveCats = useCallback((cats: Category[]) => {
     setLocalCats(cats)
@@ -95,18 +96,34 @@ function SettingsContent() {
                     <div
                       className="w-6 h-6 rounded-full cursor-pointer border-2 border-border"
                       style={{ backgroundColor: cat.color }}
-                      onClick={() => setEditingCat(editingCat === cat.id ? null : cat.id)}
+                      onClick={() => { if (editingCat === cat.id) { setEditingCat(null); setPendingColor(null) } else { setEditingCat(cat.id); setPendingColor(cat.color) } }}
                     />
                     {editingCat === cat.id && (
-                      <div className="absolute top-8 left-0 z-10 grid grid-cols-4 gap-1 p-2 bg-surface rounded-radius-md border border-border shadow-md">
-                        {SWATCHES.map((s) => (
+                      <div className="absolute top-8 left-0 z-10 bg-surface rounded-radius-md border border-border shadow-md p-3 space-y-3">
+                        <div className="grid grid-cols-4 gap-1">
+                          {SWATCHES.map((s) => (
+                            <button
+                              key={s}
+                              className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${pendingColor === s ? "border-primary scale-110" : "border-border"}`}
+                              style={{ backgroundColor: s }}
+                              onClick={() => setPendingColor(s)}
+                            />
+                          ))}
+                        </div>
+                        <div className="flex justify-center gap-2">
                           <button
-                            key={s}
-                            className="w-6 h-6 rounded-full border border-border hover:scale-110 transition-transform"
-                            style={{ backgroundColor: s }}
-                            onClick={() => handleEditColor(cat.id, s)}
-                          />
-                        ))}
+                            className="px-4 py-1.5 text-sm font-medium text-text-secondary hover:text-text-primary bg-background rounded-radius-md border border-border hover:bg-border transition-colors"
+                            onClick={() => { setEditingCat(null); setPendingColor(null) }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="px-4 py-1.5 text-sm font-medium text-white bg-primary rounded-radius-md hover:bg-primary-hover transition-colors"
+                            onClick={() => { if (pendingColor) handleEditColor(cat.id, pendingColor); setEditingCat(null); setPendingColor(null) }}
+                          >
+                            OK
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
