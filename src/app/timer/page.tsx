@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/Button"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
 import { useApp } from "@/store"
 import { useTimer } from "@/hooks/useTimer"
-import { formatDate } from "@/lib/time"
+import { useStopwatch } from "@/hooks/useStopwatch"
+import { formatDate, formatDuration } from "@/lib/time"
 
 function TaskSelector({ onSelect }: { onSelect: (id: string) => void }) {
   const { blocks, categories } = useApp()
@@ -80,101 +81,129 @@ function TimerContent() {
   const breakDuration = settings.breakDuration ?? 5
   const block = useMemo(() => blocks.find((b) => b.id === activeBlockId), [blocks, activeBlockId])
 
-  const focusDuration = block
-    ? Math.min(Math.max(Math.round((new Date(`2000-01-01T${block.endTime}`).getTime() - new Date(`2000-01-01T${block.startTime}`).getTime()) / 60000), 1), defaultTimer)
-    : defaultTimer
-
-  const [phase, setPhase] = useState<Phase>("idle")
-  const completedRef = useRef(false)
-
-  const handleBreakComplete = useCallback(() => {
-    completedRef.current = true
-  }, [])
-
-  const breakTimer = useTimer(breakDuration, handleBreakComplete)
-
-  const handleFocusComplete = useCallback(async () => {
-    if (!block) return
-    const session = {
-      id: uuidv4(),
-      blockId: block.id,
-      date: today,
-      durationMinutes: focusDuration,
-      completedAt: new Date().toISOString(),
-    }
-    await addFocusSession(session)
-  }, [block, focusDuration, addFocusSession, today])
-
-  const focusTimer = useTimer(focusDuration, handleFocusComplete)
-
   const catMap = useMemo(() => new Map(categories.map((c) => [c.id, { name: c.name, color: c.color }])), [categories])
   const blockCategory = block ? catMap.get(block.categoryId) : null
 
-  const handleSelectTask = useCallback((id: string) => {
-    setActiveBlockId(id)
-    setPhase("focus")
-  }, [setActiveBlockId])
+  const [phase, setPhase] = useState<Phase>("idle")
+  const [focusMinutes, setFocusMinutes] = useState(0)
+
+  const stopwatch = useStopwatch()
+  const breakTimer = useTimer(0)
+  const completedSessionsRef = useRef(0)
+
+  function playSessionComplete() {
+    try {
+      const ctx = new AudioContext()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = "sine"
+      osc.frequency.value = 880
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.6)
+    } catch {}
+  }
 
   useEffect(() => {
-    if (phase === "focus" && activeBlockId) {
-      focusTimer.reset(focusDuration)
-      focusTimer.start()
+    if (phase !== "focus" || !stopwatch.isRunning || defaultTimer <= 0) return
+    const threshold = defaultTimer * 60
+    const completed = Math.floor(stopwatch.elapsed / threshold)
+    if (completed > completedSessionsRef.current) {
+      completedSessionsRef.current = completed
+      playSessionComplete()
     }
-  }, [phase, activeBlockId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stopwatch.elapsed, stopwatch.isRunning, phase, defaultTimer])
 
   const goHome = useCallback(() => {
     setActiveBlockId(null)
     setPhase("idle")
+    setFocusMinutes(0)
     router.push("/")
   }, [router, setActiveBlockId])
 
+  const handleSelectTask = useCallback((id: string) => {
+    setActiveBlockId(id)
+    setPhase("focus")
+    setFocusMinutes(0)
+  }, [setActiveBlockId])
+
   const handleStartFocus = useCallback(() => {
     setPhase("focus")
-    focusTimer.start()
-  }, [focusTimer])
+    stopwatch.start()
+  }, [stopwatch])
 
   const handleFocusDone = useCallback(async () => {
-    focusTimer.reset(focusDuration)
-    if (block) {
-      await handleFocusComplete()
+    const totalSeconds = stopwatch.stop()
+    const mins = Math.round(totalSeconds / 60)
+    if (mins < 1 || !block) {
+      setPhase("idle")
+      return
     }
-    completedRef.current = false
+
+    const session = {
+      id: uuidv4(),
+      blockId: block.id,
+      date: today,
+      durationMinutes: mins,
+      completedAt: new Date().toISOString(),
+    }
+    await addFocusSession(session)
+    setFocusMinutes(mins)
+
+    const breakMins = Math.max(1, Math.round(mins * breakDuration / defaultTimer))
+    breakTimer.reset(breakMins)
+    breakTimer.start()
     setPhase("break")
-    breakTimer.reset(breakDuration)
-  }, [focusTimer, focusDuration, block, handleFocusComplete, breakTimer])
+  }, [stopwatch, block, today, addFocusSession, breakDuration, defaultTimer, breakTimer])
 
   const handleSkipFocus = useCallback(() => {
-    focusTimer.reset(focusDuration)
+    stopwatch.reset()
+    completedSessionsRef.current = 0
     setPhase("idle")
-  }, [focusTimer, focusDuration])
+    setFocusMinutes(0)
+  }, [stopwatch])
 
   const handleBreakDone = useCallback(() => {
-    breakTimer.reset(breakDuration)
+    breakTimer.reset(0)
     setPhase("idle")
+    setFocusMinutes(0)
   }, [breakTimer])
 
   const handleSkipBreak = useCallback(() => {
-    breakTimer.reset(breakDuration)
+    breakTimer.reset(0)
     setPhase("idle")
+    setFocusMinutes(0)
   }, [breakTimer])
 
   const handleClose = useCallback(() => {
-    focusTimer.reset(focusDuration)
-    breakTimer.reset(breakDuration)
+    stopwatch.reset()
+    breakTimer.reset(0)
     goHome()
-  }, [focusTimer, focusDuration, breakTimer, goHome])
+  }, [stopwatch, breakTimer, goHome])
 
-  const timer = phase === "break" ? breakTimer : focusTimer
+  const isBreakPhase = phase === "break"
+  const timer = isBreakPhase ? breakTimer : stopwatch
 
   const togglePlayPause = useCallback(() => {
-    if (!timer.isRunning) {
-      timer.start()
-    } else if (timer.isPaused) {
-      timer.resume()
+    if (isBreakPhase) {
+      if (!breakTimer.isRunning) {
+        breakTimer.start()
+      } else if (breakTimer.isPaused) {
+        breakTimer.resume()
+      } else {
+        breakTimer.pause()
+      }
     } else {
-      timer.pause()
+      if (!stopwatch.isRunning) {
+        stopwatch.start()
+      } else {
+        stopwatch.pause()
+      }
     }
-  }, [timer])
+  }, [isBreakPhase, breakTimer, stopwatch])
 
   const minutesStr = String(timer.minutes).padStart(2, "0")
   const secondsStr = String(timer.seconds).padStart(2, "0")
@@ -204,7 +233,7 @@ function TimerContent() {
             <div className="text-center space-y-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium">{block.title}</p>
-                <p className="text-caption text-text-secondary">{block.startTime} — {block.endTime}</p>
+                <p className="text-caption text-text-secondary">{block.startTime} — {block.endTime} • {formatDuration(block.startTime, block.endTime)}</p>
                 {blockCategory && (
                   <span className="inline-block px-2 py-0.5 rounded-full text-caption text-white mt-1" style={{ backgroundColor: blockCategory.color }}>
                     {blockCategory.name}
@@ -234,7 +263,7 @@ function TimerContent() {
                 <Coffee className="w-5 h-5" />
                 <p className="text-sm font-medium">Break Time</p>
               </div>
-              <p className="text-caption text-text-secondary">Well done! Take a short break</p>
+              <p className="text-caption text-text-secondary">Focused for {focusMinutes}m — take a short break</p>
             </div>
           )}
 
@@ -247,7 +276,7 @@ function TimerContent() {
                 stroke={phase === "break" ? "var(--color-secondary)" : "var(--color-primary)"}
                 strokeWidth="6"
                 strokeDasharray={`${2 * Math.PI * 45}`}
-                strokeDashoffset={`${2 * Math.PI * 45 * (1 - timer.progress / 100)}`}
+                strokeDashoffset={`${2 * Math.PI * 45 * (1 - (isBreakPhase ? breakTimer.progress : (defaultTimer > 0 ? (stopwatch.elapsed % (defaultTimer * 60)) / (defaultTimer * 60) * 100 : 0)) / 100)}`}
                 strokeLinecap="round"
                 className="transition-all duration-1000 ease-linear"
               />
@@ -255,14 +284,15 @@ function TimerContent() {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-5xl font-bold tabular-nums tracking-tight">{minutesStr}:{secondsStr}</span>
               <span className="text-sm text-text-secondary mt-1">
-                {phase === "break" ? "Break" : phase === "focus" && timer.isRunning && !timer.isPaused ? "Focus Time" : timer.isPaused ? "Paused" : "Ready"}
+                {phase === "break" ? "Break" : stopwatch.isRunning ? "Focus Time" : stopwatch.elapsed > 0 ? "Paused" : "Ready"}
+                {phase === "focus" && completedSessionsRef.current > 0 && <span className="ml-2">• {completedSessionsRef.current} sesi</span>}
               </span>
             </div>
           </div>
 
           {phase !== "idle" && (
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={phase === "break" ? handleSkipBreak : handleSkipFocus} disabled={!timer.isRunning && !timer.isPaused}>
+              <Button variant="ghost" size="sm" onClick={phase === "break" ? handleSkipBreak : handleSkipFocus} disabled={phase === "break" && !breakTimer.isRunning}>
                 <SkipForward className="w-4 h-4" /> Skip
               </Button>
 
@@ -270,17 +300,16 @@ function TimerContent() {
                 onClick={togglePlayPause}
                 className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center
                   hover:bg-primary-hover transition-colors shadow-lg active:scale-95"
-                aria-label={timer.isRunning && !timer.isPaused ? "Pause" : "Play"}
+                aria-label={isBreakPhase ? (breakTimer.isRunning && !breakTimer.isPaused ? "Pause" : "Play") : (stopwatch.isRunning ? "Pause" : "Play")}
               >
-                {timer.isRunning && !timer.isPaused ? (
-                  <Pause className="w-7 h-7" />
-                ) : (
-                  <Play className="w-7 h-7 ml-0.5" />
-                )}
+                {isBreakPhase
+                  ? (breakTimer.isRunning && !breakTimer.isPaused ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-0.5" />)
+                  : (stopwatch.isRunning ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-0.5" />)
+                }
               </button>
 
-              <Button variant="ghost" size="sm" onClick={phase === "break" ? handleBreakDone : handleFocusDone} disabled={!timer.isRunning && !timer.isPaused}>
-                <CheckCheck className="w-4 h-4" /> Done
+              <Button variant="ghost" size="sm" onClick={phase === "break" ? handleBreakDone : handleFocusDone} disabled={phase === "break" && !timer.isRunning}>
+                <CheckCheck className="w-4 h-4" /> {phase === "focus" ? "Stop" : "Done"}
               </Button>
             </div>
           )}

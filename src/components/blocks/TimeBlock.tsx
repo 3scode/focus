@@ -3,6 +3,7 @@
 import { memo } from "react"
 import { GripVertical, CheckCircle2, Timer } from "lucide-react"
 import type { Block } from "@/types"
+import { formatDuration } from "@/lib/time"
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities"
 import type { DraggableAttributes } from "@dnd-kit/core"
 
@@ -61,6 +62,9 @@ export const TimeBlock = memo(function TimeBlock({
         <div className="flex items-center gap-2">
           <span className="font-mono text-time text-white/80 tabular-nums whitespace-nowrap">
             {block.startTime} — {block.endTime}
+          </span>
+          <span className="font-mono text-caption text-white/60 tabular-nums">
+            {formatDuration(block.startTime, block.endTime)}
           </span>
           {block.completed && <CheckCircle2 className="w-3.5 h-3.5 text-white/90" />}
           {!block.completed && onTimerClick && (

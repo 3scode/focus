@@ -15,6 +15,12 @@ export function formatTimeRange(start: string, end: string): string {
   return `${start} — ${end}`
 }
 
+export function formatDuration(start: string, end: string): string {
+  const mins = calcDuration(start, end)
+  if (mins < 60) return `${mins}m`
+  return `${Math.floor(mins / 60)}h ${mins % 60 > 0 ? `${mins % 60}m` : ""}`.trim()
+}
+
 export function calcDuration(start: string, end: string): number {
   const s = parse(start, "HH:mm", new Date())
   const e = parse(end, "HH:mm", new Date())

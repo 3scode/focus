@@ -79,13 +79,13 @@ function DraggableBlock({
 
   return (
     <div className="relative overflow-hidden h-full">
-      <div className="absolute inset-y-0 right-0 flex items-center bg-error text-white px-4 rounded-radius-md">
+      <div className="absolute inset-y-0 right-0 flex items-center bg-error text-white px-3 rounded-radius-md">
         <button
           onClick={() => onDelete(block.id)}
-          className="flex items-center gap-1 text-sm font-medium"
+          className="flex items-center gap-1 text-xs font-medium"
           aria-label="Delete block"
         >
-          <Trash2 className="w-4 h-4" /> Delete
+          <Trash2 className="w-3 h-3" /> Delete
         </button>
       </div>
 

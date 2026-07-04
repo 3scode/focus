@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react"
 import { DayCard } from "./DayCard"
-import { getWeekDays, isToday, format } from "@/lib/time"
+import { getWeekDays, isToday, format, formatDuration } from "@/lib/time"
 import type { Block } from "@/types"
 import type { Category } from "@/types"
 
@@ -117,6 +117,7 @@ export function WeekGrid({
                     <span className="font-mono">{format(d.date, "EEE, MMM d")}</span>
                     <span>•</span>
                     <span className="font-mono">{block.startTime} — {block.endTime}</span>
+                    <span className="font-mono opacity-60">{formatDuration(block.startTime, block.endTime)}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     {block.completed && <CheckCircle2 className="w-4 h-4" />}

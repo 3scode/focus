@@ -17,9 +17,9 @@ const accentMap = {
 
 export function StatCard({ value, label, variant = "primary", icon: Icon }: StatCardProps) {
   return (
-    <div className="flex flex-col items-center gap-1 p-4 bg-surface rounded-radius-md border border-border min-w-[100px]">
-      <Icon className={`w-5 h-5 ${accentMap[variant]}`} />
-      <span className="text-2xl font-bold tabular-nums">{value}</span>
+    <div className="flex flex-col items-center gap-0.5 p-2 bg-surface rounded-radius-md border border-border min-w-[80px]">
+      <Icon className={`w-4 h-4 ${accentMap[variant]}`} />
+      <span className="text-lg font-bold tabular-nums">{value}</span>
       <span className="text-caption text-text-secondary">{label}</span>
     </div>
   )
