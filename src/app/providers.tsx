@@ -2,7 +2,12 @@
 
 import { type ReactNode } from "react"
 import { AppProvider } from "@/store"
+import { AuthProvider } from "@/store/auth"
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <AppProvider>{children}</AppProvider>
+  return (
+    <AuthProvider>
+      <AppProvider>{children}</AppProvider>
+    </AuthProvider>
+  )
 }

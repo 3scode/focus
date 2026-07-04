@@ -3,11 +3,12 @@
 import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
 import { addWeeks, subWeeks, format } from "date-fns"
+import { AuthGuard } from "@/components/layout/AuthGuard"
 import { WeekGrid } from "@/components/blocks/WeekGrid"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
 import { useApp } from "@/store"
 
-export default function WeekPage() {
+function WeekContent() {
   const router = useRouter()
   const { blocks, categories, setSelectedDate } = useApp()
   const [weekOffset, setWeekOffset] = useState(0)
@@ -26,7 +27,7 @@ export default function WeekPage() {
   const handleDayTap = useCallback((date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd")
     setSelectedDate(dateStr)
-    router.push(`/?date=${dateStr}`)
+    router.push(`/today?date=${dateStr}`)
   }, [router, setSelectedDate])
 
   return (
@@ -47,5 +48,13 @@ export default function WeekPage() {
       </main>
       <BottomTab />
     </div>
+  )
+}
+
+export default function WeekPage() {
+  return (
+    <AuthGuard>
+      <WeekContent />
+    </AuthGuard>
   )
 }

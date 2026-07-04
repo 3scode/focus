@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { X, Play, Pause, SkipForward, CheckCheck, ChevronDown, ListTodo, Coffee } from "lucide-react"
 import { v4 as uuidv4 } from "uuid"
+import { AuthGuard } from "@/components/layout/AuthGuard"
 import { Button } from "@/components/ui/Button"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
 import { useApp } from "@/store"
@@ -121,7 +122,7 @@ function TimerContent() {
     setActiveBlockId(null)
     setPhase("idle")
     setFocusMinutes(0)
-    router.push("/")
+    router.push("/today")
   }, [router, setActiveBlockId])
 
   const handleSelectTask = useCallback((id: string) => {
@@ -327,5 +328,9 @@ function TimerContent() {
 }
 
 export default function TimerPage() {
-  return <TimerContent />
+  return (
+    <AuthGuard>
+      <TimerContent />
+    </AuthGuard>
+  )
 }

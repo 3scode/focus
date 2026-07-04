@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { addDays, format, parseISO } from "date-fns"
 import { CheckCircle2, Circle, ArrowRight, ChevronLeft, ChevronRight, Clock, Target } from "lucide-react"
+import { AuthGuard } from "@/components/layout/AuthGuard"
 import { StatCard } from "@/components/ui/StatCard"
 import { Button } from "@/components/ui/Button"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
@@ -11,7 +12,7 @@ import { useApp } from "@/store"
 import { useBlocksByDate } from "@/hooks/useBlocks"
 import { formatDisplayDate, formatDate } from "@/lib/time"
 
-export default function ReviewPage() {
+function ReviewContent() {
   const router = useRouter()
   const { selectedDate, setSelectedDate, updateBlock, blocks } = useApp()
 
@@ -147,5 +148,13 @@ export default function ReviewPage() {
       </main>
       <BottomTab />
     </div>
+  )
+}
+
+export default function ReviewPage() {
+  return (
+    <AuthGuard>
+      <ReviewContent />
+    </AuthGuard>
   )
 }

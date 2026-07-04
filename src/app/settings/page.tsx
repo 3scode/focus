@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { Trash2, Plus, Download, AlertTriangle } from "lucide-react"
+import { AuthGuard } from "@/components/layout/AuthGuard"
 import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
@@ -15,7 +16,7 @@ const SWATCHES = [
   "#14B8A6", "#6366F1", "#EC4899", "#F97316",
 ]
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { categories, settings, updateCategories, updateSettings, clearData } = useApp()
   const [localCats, setLocalCats] = useState<Category[]>(categories)
   const [editingCat, setEditingCat] = useState<string | null>(null)
@@ -205,5 +206,13 @@ export default function SettingsPage() {
         </div>
       </Modal>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <AuthGuard>
+      <SettingsContent />
+    </AuthGuard>
   )
 }

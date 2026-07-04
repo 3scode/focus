@@ -2,10 +2,11 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { CalendarDays, LayoutGrid, Timer, BarChart3, Settings } from "lucide-react"
+import { CalendarDays, LayoutGrid, Timer, BarChart3, Settings, LogOut, User } from "lucide-react"
+import { useAuth } from "@/store/auth"
 
 const links = [
-  { href: "/", label: "Today", icon: CalendarDays },
+  { href: "/today", label: "Today", icon: CalendarDays },
   { href: "/week", label: "Week", icon: LayoutGrid },
   { href: "/timer", label: "Timer", icon: Timer },
   { href: "/review", label: "Review", icon: BarChart3 },
@@ -14,10 +15,11 @@ const links = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { user, signOut } = useAuth()
 
   return (
     <aside className="hidden md:flex flex-col w-56 h-screen bg-surface border-r border-border p-4 shrink-0">
-      <h1 className="text-lg font-bold mb-8 px-3">TimeBlock</h1>
+      <Link href="/" className="text-lg font-bold mb-8 px-3 block">TimeBlock</Link>
       <nav className="flex flex-col gap-1">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href
@@ -36,6 +38,24 @@ export function Sidebar() {
           )
         })}
       </nav>
+      <div className="mt-auto border-t border-border pt-4 px-3">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <User className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user?.name}</p>
+            <p className="text-caption text-text-secondary truncate">{user?.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={signOut}
+          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-secondary hover:text-error rounded-radius-md hover:bg-background transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Keluar
+        </button>
+      </div>
     </aside>
   )
 }
