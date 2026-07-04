@@ -13,7 +13,6 @@ const PX_PER_MIN = TIMELINE_SLOT_HEIGHT / 60
 interface TimelineProps {
   blocks: Block[]
   categoryColors: Record<string, string>
-  categoryNames: Record<string, string>
   dayStart: string
   dayEnd: string
   onBlockTap: (id: string) => void
@@ -52,19 +51,15 @@ function Slot({ time, hasBlocks, onTap }: { time: string; hasBlocks: boolean; on
 function DraggableBlock({
   block,
   categoryColor,
-  categoryName,
   onTap,
   onTimerClick,
   onDelete,
-  compact,
 }: {
   block: Block
   categoryColor: string
-  categoryName: string
   onTap: (id: string) => void
   onTimerClick: (id: string) => void
   onDelete: (id: string) => void
-  compact?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: block.id,
@@ -117,12 +112,8 @@ function DraggableBlock({
         <TimeBlock
           block={block}
           categoryColor={categoryColor}
-          categoryName={categoryName}
           onTap={onTap}
           onTimerClick={onTimerClick}
-          dragListeners={listeners}
-          dragAttributes={attributes}
-          compact={compact}
         />
       </div>
     </div>
@@ -132,7 +123,6 @@ function DraggableBlock({
 export function Timeline({
   blocks,
   categoryColors,
-  categoryNames,
   dayStart,
   dayEnd,
   onBlockTap,
@@ -261,7 +251,7 @@ export function Timeline({
           )
         })}
 
-        {blockLayout.map(({ block, top, height, column, numColumns, naturalHeight }) => (
+        {blockLayout.map(({ block, top, height, column }) => (
           <div
             key={block.id}
             className="absolute pointer-events-auto"
@@ -277,11 +267,9 @@ export function Timeline({
             <DraggableBlock
               block={block}
               categoryColor={block.color ?? categoryColors[block.categoryId] ?? "#6B7280"}
-              categoryName={categoryNames[block.categoryId] ?? "Other"}
               onTap={onBlockTap}
               onTimerClick={onTimerClick}
               onDelete={onDeleteBlock}
-              compact={naturalHeight < 40}
             />
           </div>
         ))}

@@ -36,12 +36,6 @@ function TodayContent() {
     return map
   }, [categories])
 
-  const categoryNameMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    categories.forEach((c) => { map[c.id] = c.name })
-    return map
-  }, [categories])
-
   const handleSlotTap = useCallback((time: string) => {
     setPreselectedTime(time)
     setEditBlock(null)
@@ -158,7 +152,6 @@ function TodayContent() {
               <Timeline
                 blocks={blocks}
                 categoryColors={colorMap}
-                categoryNames={categoryNameMap}
                 dayStart={settings.dayStart ?? "08:00"}
                 dayEnd={settings.dayEnd ?? "18:00"}
                 onBlockTap={handleBlockTap}
