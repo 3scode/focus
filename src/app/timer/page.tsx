@@ -118,7 +118,8 @@ function TimerContent() {
     const totalSeconds = timerCtx.stopFocus()
     await saveAndReset(totalSeconds)
     timerCtx.resetTimer()
-  }, [timerCtx, saveAndReset])
+    setActiveBlockId(null)
+  }, [timerCtx, saveAndReset, setActiveBlockId])
 
   const handleRestFocus = useCallback(async () => {
     const totalSeconds = timerCtx.stopFocus()
