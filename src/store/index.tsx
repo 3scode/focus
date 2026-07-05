@@ -3,8 +3,9 @@
 import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react"
 import type { Block, Category, FocusSession, Settings } from "@/types"
 import * as storage from "@/lib/storage"
-import { formatDate } from "@/lib/time"
+import { formatDate, calcDuration } from "@/lib/time"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/constants"
+import { toast } from "sonner"
 
 interface AppState {
   blocks: Block[]
@@ -87,6 +88,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const blocksList = await storage.getBlocks()
     const block = blocksList.find((b) => b.id === id)
     if (!block) return
+    
+    if (!block.completed) {
+      const taskDurationMins = calcDuration(block.startTime, block.endTime)
+      const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
+      
+      if (totalFocusMins < taskDurationMins) {
+        const progressPercent = Math.round((totalFocusMins / taskDurationMins) * 100)
+        toast.error(`Task belum selesai! Progress: ${progressPercent}% (${totalFocusMins}/${taskDurationMins} menit)`)
+        return
+      }
+    }
+    
     block.completed = !block.completed
     if (block.completed) block.missed = false
     block.updatedAt = new Date().toISOString()
