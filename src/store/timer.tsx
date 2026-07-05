@@ -37,24 +37,79 @@ interface TimerContextValue {
 
 const TimerContext = createContext<TimerContextValue | null>(null)
 
+const PERSIST_KEY = "time-blocking:timer"
+
+interface PersistedTimer {
+  phase: Phase
+  baseElapsed: number
+  startTimestamp: number | null
+  breakElapsed: number
+  breakStartTimestamp: number | null
+  breakTotal: number
+  focusMinutes: number
+  completedSessions: number
+  activeBlockId: string | null
+  isPaused: boolean
+}
+
+function persist(t: PersistedTimer) {
+  try { localStorage.setItem(PERSIST_KEY, JSON.stringify(t)) } catch {}
+}
+
+function load(): PersistedTimer | null {
+  try {
+    const raw = localStorage.getItem(PERSIST_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch { return null }
+}
+
+function clearPersist() {
+  try { localStorage.removeItem(PERSIST_KEY) } catch {}
+}
+
 export function TimerProvider({ children }: { children: ReactNode }) {
-  const [phase, setPhase] = useState<Phase>("idle")
-  const [elapsed, setElapsed] = useState(0)
-  const [isRunning, setIsRunning] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [focusMinutes, setFocusMinutes] = useState(0)
-  const [breakTimeLeft, setBreakTimeLeft] = useState(0)
-  const [breakTotal, setBreakTotal] = useState(0)
-  const [completedSessions, setCompletedSessions] = useState(0)
+  const saved = load()
+
+  const [phase, setPhase] = useState<Phase>(saved?.phase ?? "idle")
+  const [elapsed, setElapsed] = useState(() => {
+    if (saved?.phase === "focus" && saved.startTimestamp !== null) {
+      return saved.baseElapsed + Math.floor((Date.now() - saved.startTimestamp) / 1000)
+    }
+    return saved?.baseElapsed ?? 0
+  })
+  const [isRunning, setIsRunning] = useState(() => {
+    if (!saved) return false
+    if (saved.phase === "idle") return false
+    return !saved.isPaused
+  })
+  const [isPaused, setIsPaused] = useState(saved?.isPaused ?? false)
+  const [focusMinutes, setFocusMinutes] = useState(saved?.focusMinutes ?? 0)
+  const [breakTimeLeft, setBreakTimeLeft] = useState(() => {
+    if (saved?.phase === "break" && saved.breakStartTimestamp !== null) {
+      const consumed = saved.breakElapsed + Math.floor((Date.now() - saved.breakStartTimestamp) / 1000)
+      return Math.max(0, saved.breakTotal - consumed)
+    }
+    if (saved?.phase === "break") return saved.breakTotal - saved.breakElapsed
+    return 0
+  })
+  const [breakTotal, setBreakTotal] = useState(saved?.breakTotal ?? 0)
+  const [completedSessions, setCompletedSessions] = useState(saved?.completedSessions ?? 0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { setActiveBlockId, settings } = useApp()
   const defaultTimer = settings.defaultTimer ?? 25
 
-  const baseElapsedRef = useRef(0)
-  const startTimeRef = useRef<number | null>(null)
-  const breakElapsedRef = useRef(0)
-  const breakStartRef = useRef<number | null>(null)
-  const breakTotalRef = useRef(0)
+  const baseElapsedRef = useRef(saved?.baseElapsed ?? 0)
+  const startTimeRef = useRef<number | null>(saved?.startTimestamp ?? null)
+  const breakElapsedRef = useRef(saved?.breakElapsed ?? 0)
+  const breakStartRef = useRef<number | null>(saved?.breakStartTimestamp ?? null)
+  const breakTotalRef = useRef(saved?.breakTotal ?? 0)
+
+  useEffect(() => {
+    if (saved?.activeBlockId) {
+      setActiveBlockId(saved.activeBlockId)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const clear = useCallback(() => {
     if (intervalRef.current) {
@@ -66,6 +121,25 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     return clear
   }, [clear])
+
+  const persistCurrent = useCallback(() => {
+    persist({
+      phase,
+      baseElapsed: baseElapsedRef.current,
+      startTimestamp: startTimeRef.current,
+      breakElapsed: breakElapsedRef.current,
+      breakStartTimestamp: breakStartRef.current,
+      breakTotal: breakTotalRef.current,
+      focusMinutes,
+      completedSessions,
+      activeBlockId: null,
+      isPaused,
+    })
+  }, [phase, focusMinutes, completedSessions, isPaused])
+
+  useEffect(() => {
+    persistCurrent()
+  }, [persistCurrent, elapsed, breakTimeLeft])
 
   const tick = useCallback(() => {
     if (phase === "focus" && startTimeRef.current !== null) {
@@ -88,11 +162,11 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     clear()
     if (phase === "focus" && isRunning && !isPaused) {
-      startTimeRef.current = Date.now()
+      if (startTimeRef.current === null) startTimeRef.current = Date.now()
       tick()
       intervalRef.current = setInterval(tick, 1000)
     } else if (phase === "break" && isRunning && !isPaused) {
-      breakStartRef.current = Date.now()
+      if (breakStartRef.current === null) breakStartRef.current = Date.now()
       tick()
       intervalRef.current = setInterval(tick, 1000)
     }
@@ -157,6 +231,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setElapsed(0)
     setIsRunning(false)
     setIsPaused(false)
+    clearPersist()
     return total
   }, [clear])
 
@@ -170,6 +245,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setIsPaused(false)
     setFocusMinutes(0)
     setCompletedSessions(0)
+    clearPersist()
   }, [clear])
 
   const setFocusMinutesState = useCallback((mins: number) => {
@@ -211,6 +287,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setIsPaused(false)
     setBreakTimeLeft(0)
     setFocusMinutes(0)
+    clearPersist()
   }, [clear])
 
   const resetTimer = useCallback(() => {
@@ -227,6 +304,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setFocusMinutes(0)
     setBreakTimeLeft(0)
     setCompletedSessions(0)
+    clearPersist()
   }, [clear])
 
   const minutes = Math.floor(elapsed / 60)
