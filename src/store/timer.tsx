@@ -96,7 +96,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const [breakTotal, setBreakTotal] = useState(saved?.breakTotal ?? 0)
   const [completedSessions, setCompletedSessions] = useState(saved?.completedSessions ?? 0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const { setActiveBlockId, settings } = useApp()
+  const { activeBlockId, setActiveBlockId, settings } = useApp()
   const defaultTimer = settings.defaultTimer ?? 25
 
   const baseElapsedRef = useRef(saved?.baseElapsed ?? 0)
@@ -132,10 +132,10 @@ export function TimerProvider({ children }: { children: ReactNode }) {
       breakTotal: breakTotalRef.current,
       focusMinutes,
       completedSessions,
-      activeBlockId: null,
+      activeBlockId,
       isPaused,
     })
-  }, [phase, focusMinutes, completedSessions, isPaused])
+  }, [phase, focusMinutes, completedSessions, isPaused, activeBlockId])
 
   useEffect(() => {
     persistCurrent()

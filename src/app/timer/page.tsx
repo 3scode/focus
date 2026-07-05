@@ -123,8 +123,7 @@ function TimerContent() {
   const handleRestFocus = useCallback(async () => {
     const totalSeconds = timerCtx.stopFocus()
     const mins = Math.round(totalSeconds / 60)
-    const saved = await saveAndReset(totalSeconds)
-    if (!saved) return
+    await saveAndReset(totalSeconds)
     const breakMins = Math.max(1, Math.round(mins * breakDuration / defaultTimer))
     timerCtx.startBreak(breakMins)
   }, [timerCtx, saveAndReset, breakDuration, defaultTimer])

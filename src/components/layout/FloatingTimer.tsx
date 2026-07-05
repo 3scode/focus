@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Play, Pause, Square, Timer, Coffee } from "lucide-react"
 import { useTimerContext } from "@/store/timer"
@@ -7,11 +8,16 @@ import { useApp } from "@/store"
 
 export function FloatingTimer() {
   const router = useRouter()
-  const { phase, isRunning, isPaused, minutes, seconds, breakMinutes, breakSeconds, completedSessions, pauseFocus, resumeFocus, skipFocus, skipBreak, resetTimer } = useTimerContext()
+  const { phase, isRunning, isPaused, minutes, seconds, breakMinutes, breakSeconds, completedSessions, pauseFocus, resumeFocus, skipFocus, skipBreak } = useTimerContext()
   const { blocks } = useApp()
   const { activeBlockId } = useApp()
+  const [mounted, setMounted] = useState(false)
 
-  if (phase === "idle") return null
+  useEffect(() => {
+    setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect
+  }, [])
+
+  if (!mounted || phase === "idle") return null
 
   const block = blocks.find((b) => b.id === activeBlockId)
   const isBreak = phase === "break"
