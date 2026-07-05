@@ -50,6 +50,12 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const { setActiveBlockId, settings } = useApp()
   const defaultTimer = settings.defaultTimer ?? 25
 
+  const baseElapsedRef = useRef(0)
+  const startTimeRef = useRef<number | null>(null)
+  const breakElapsedRef = useRef(0)
+  const breakStartRef = useRef<number | null>(null)
+  const breakTotalRef = useRef(0)
+
   const clear = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -61,39 +67,37 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     return clear
   }, [clear])
 
-  useEffect(() => {
-    if (phase === "focus") {
-      if (isRunning && !isPaused) {
-        intervalRef.current = setInterval(() => {
-          setElapsed((prev) => prev + 1)
-        }, 1000)
-      } else {
+  const tick = useCallback(() => {
+    if (phase === "focus" && startTimeRef.current !== null) {
+      const delta = Math.floor((Date.now() - startTimeRef.current) / 1000)
+      const total = baseElapsedRef.current + delta
+      setElapsed(total)
+    } else if (phase === "break" && breakStartRef.current !== null && breakTotalRef.current > 0) {
+      const delta = Math.floor((Date.now() - breakStartRef.current) / 1000)
+      const consumed = breakElapsedRef.current + delta
+      const remaining = Math.max(0, breakTotalRef.current - consumed)
+      setBreakTimeLeft(remaining)
+      if (remaining <= 0) {
         clear()
-      }
-    } else if (phase === "break") {
-      if (isRunning && !isPaused) {
-        intervalRef.current = setInterval(() => {
-          setBreakTimeLeft((prev) => {
-            if (prev <= 1) {
-              return 0
-            }
-            return prev - 1
-          })
-        }, 1000)
-      } else {
-        clear()
+        setIsRunning(false)
+        setPhase("idle")
       }
     }
-    return clear
-  }, [phase, isRunning, isPaused, clear])
+  }, [phase, clear])
 
   useEffect(() => {
-    if (phase === "break" && breakTimeLeft <= 0 && isRunning) {
-      clear()
-      setIsRunning(false)
-      setPhase("idle")
+    clear()
+    if (phase === "focus" && isRunning && !isPaused) {
+      startTimeRef.current = Date.now()
+      tick()
+      intervalRef.current = setInterval(tick, 1000)
+    } else if (phase === "break" && isRunning && !isPaused) {
+      breakStartRef.current = Date.now()
+      tick()
+      intervalRef.current = setInterval(tick, 1000)
     }
-  }, [phase, breakTimeLeft, isRunning, clear])
+    return clear
+  }, [phase, isRunning, isPaused, tick, clear])
 
   useEffect(() => {
     if (phase !== "focus" || !isRunning || isPaused || defaultTimer <= 0) return
@@ -119,33 +123,47 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   const startFocus = useCallback((blockId: string) => {
     setActiveBlockId(blockId)
-    setPhase("focus")
+    baseElapsedRef.current = 0
+    startTimeRef.current = null
     setElapsed(0)
     setFocusMinutes(0)
+    setPhase("focus")
     setIsRunning(true)
     setIsPaused(false)
     setCompletedSessions(0)
   }, [setActiveBlockId])
 
   const pauseFocus = useCallback(() => {
+    if (startTimeRef.current !== null) {
+      baseElapsedRef.current += Math.floor((Date.now() - startTimeRef.current) / 1000)
+      startTimeRef.current = null
+    }
     setIsPaused(true)
   }, [])
 
   const resumeFocus = useCallback(() => {
+    startTimeRef.current = Date.now()
     setIsPaused(false)
   }, [])
 
   const stopFocus = useCallback(() => {
     clear()
+    let total = baseElapsedRef.current
+    if (startTimeRef.current !== null) {
+      total += Math.floor((Date.now() - startTimeRef.current) / 1000)
+      startTimeRef.current = null
+    }
+    baseElapsedRef.current = 0
+    setElapsed(0)
     setIsRunning(false)
     setIsPaused(false)
-    const total = elapsed
-    setElapsed(0)
     return total
-  }, [elapsed, clear])
+  }, [clear])
 
   const skipFocus = useCallback(() => {
     clear()
+    baseElapsedRef.current = 0
+    startTimeRef.current = null
     setElapsed(0)
     setPhase("idle")
     setIsRunning(false)
@@ -159,23 +177,35 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const startBreak = useCallback((mins: number) => {
+    const total = mins * 60
+    breakTotalRef.current = total
+    breakElapsedRef.current = 0
+    breakStartRef.current = null
+    setBreakTotal(total)
+    setBreakTimeLeft(total)
     setPhase("break")
-    setBreakTotal(mins * 60)
-    setBreakTimeLeft(mins * 60)
     setIsRunning(true)
     setIsPaused(false)
   }, [])
 
   const pauseBreak = useCallback(() => {
+    if (breakStartRef.current !== null) {
+      breakElapsedRef.current += Math.floor((Date.now() - breakStartRef.current) / 1000)
+      breakStartRef.current = null
+    }
     setIsPaused(true)
   }, [])
 
   const resumeBreak = useCallback(() => {
+    breakStartRef.current = Date.now()
     setIsPaused(false)
   }, [])
 
   const skipBreak = useCallback(() => {
     clear()
+    breakElapsedRef.current = 0
+    breakStartRef.current = null
+    breakTotalRef.current = 0
     setPhase("idle")
     setIsRunning(false)
     setIsPaused(false)
@@ -185,6 +215,11 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   const resetTimer = useCallback(() => {
     clear()
+    baseElapsedRef.current = 0
+    startTimeRef.current = null
+    breakElapsedRef.current = 0
+    breakStartRef.current = null
+    breakTotalRef.current = 0
     setPhase("idle")
     setElapsed(0)
     setIsRunning(false)
