@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
 import { useApp } from "@/store"
 import { useTimerContext } from "@/store/timer"
-import { formatDate, formatDuration } from "@/lib/time"
+import { formatDate, formatDuration, calcDuration } from "@/lib/time"
 
 function TaskSelector({ onSelect }: { onSelect: (id: string) => void }) {
   const { blocks, categories } = useApp()
@@ -84,6 +84,18 @@ function TimerContent() {
   const blockCategory = block
     ? { name: catMap.get(block.categoryId)?.name ?? "", color: block.color ?? catMap.get(block.categoryId)?.color ?? "#6B7280" }
     : null
+
+  const taskProgress = useMemo(() => {
+    if (timerCtx.phase !== "focus" || !block) return { percent: 0, current: 0, total: 0 }
+    
+    const taskDurationMins = calcDuration(block.startTime, block.endTime)
+    const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
+    const currentElapsedMins = Math.floor(timerCtx.elapsed / 60)
+    const currentTotal = totalFocusMins + currentElapsedMins
+    const percent = Math.round((currentTotal / taskDurationMins) * 100)
+    
+    return { percent, current: currentTotal, total: taskDurationMins }
+  }, [timerCtx.phase, block, timerCtx.elapsed])
 
   const goHome = useCallback(() => {
     timerCtx.resetTimer()
@@ -247,6 +259,20 @@ function TimerContent() {
               </span>
             </div>
           </div>
+
+          {phase === "focus" && block && (
+            <div className="w-full max-w-xs space-y-2">
+              <div className="w-full bg-border rounded-full h-2 overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.min(taskProgress.percent, 100)}%` }}
+                />
+              </div>
+              <p className="text-caption text-text-secondary text-center">
+                Progress: {taskProgress.percent}% ({taskProgress.current}/{taskProgress.total} min)
+              </p>
+            </div>
+          )}
 
           {phase !== "idle" && (
             <div className="flex items-center gap-4">
