@@ -133,8 +133,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const blocksList = await storage.getBlocks()
     const block = blocksList.find((b) => b.id === session.blockId)
     if (block) {
-      block.completed = true
       block.focusSessions = [...(block.focusSessions || []), session]
+      
+      const taskDurationMins = calcDuration(block.startTime, block.endTime)
+      const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
+      
+      if (totalFocusMins >= taskDurationMins) {
+        block.completed = true
+      }
+      
       block.updatedAt = new Date().toISOString()
       await storage.saveBlock(block)
       setBlocks((prev) => prev.map((b) => (b.id === block.id ? block : b)))
