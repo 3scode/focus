@@ -22,7 +22,7 @@ interface AppContextValue extends AppState {
   updateBlock: (block: Block) => Promise<void>
   removeBlock: (id: string) => Promise<void>
   removeRecurringSeries: (groupId: string) => Promise<void>
-  toggleBlockComplete: (id: string) => Promise<void>
+  toggleBlockComplete: (id: string, confirmed?: boolean) => Promise<void>
   toggleBlockMissed: (id: string) => Promise<void>
   updateCategories: (cats: Category[]) => Promise<void>
   updateSettings: (settings: Settings) => Promise<void>
@@ -84,12 +84,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setBlocks((prev) => prev.filter((b) => b.recurringGroupId !== groupId))
   }, [])
 
-  const toggleBlockComplete = useCallback(async (id: string) => {
+  const toggleBlockComplete = useCallback(async (id: string, confirmed?: boolean) => {
     const blocksList = await storage.getBlocks()
     const block = blocksList.find((b) => b.id === id)
     if (!block) return
     
-    if (!block.completed) {
+    if (!block.completed && !confirmed) {
       const taskDurationMins = calcDuration(block.startTime, block.endTime)
       const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
       

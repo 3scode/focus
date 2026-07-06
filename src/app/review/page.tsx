@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { addDays, format, parseISO } from "date-fns"
 import { CheckCircle2, Circle, ArrowRight, ChevronLeft, ChevronRight, Clock, Target, Timer } from "lucide-react"
@@ -14,6 +14,7 @@ import { useApp } from "@/store"
 import { useBlocksByDate } from "@/hooks/useBlocks"
 import { useTimerContext } from "@/store/timer"
 import { formatDisplayDate, formatDate, calcDuration } from "@/lib/time"
+import { toast } from "sonner"
 
 function ReviewContent() {
   const router = useRouter()
@@ -34,6 +35,25 @@ function ReviewContent() {
     }, 0)
     return { completed, missed, focusTime, total: dayBlocks.length }
   }, [dayBlocks])
+
+  const notifiedDone = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    for (const block of dayBlocks) {
+      if (notifiedDone.current.has(block.id)) continue
+      const scheduled = calcDuration(block.startTime, block.endTime)
+      if (scheduled <= 0) continue
+      const savedMins = (block.focusSessions ?? []).reduce((s, fs) => s + fs.durationMinutes, 0)
+      const activeMins = timerCtx.phase !== "idle" && activeBlockId === block.id
+        ? Math.round(timerCtx.elapsed / 60)
+        : 0
+      const totalMins = savedMins + activeMins
+      if (totalMins >= scheduled) {
+        notifiedDone.current.add(block.id)
+        toast.success(`Waktu habis! ${block.title} selesai`)
+      }
+    }
+  }, [dayBlocks, timerCtx.elapsed, timerCtx.phase, activeBlockId])
 
   function BlockProgress({ block }: { block: Block }) {
     const scheduled = calcDuration(block.startTime, block.endTime)

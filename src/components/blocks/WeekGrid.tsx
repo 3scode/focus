@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayCard } from "./DayCard"
-import { getWeekDays, isToday, format, formatDuration } from "@/lib/time"
+import { getWeekDays, isToday, format, formatDuration, calcDuration } from "@/lib/time"
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import type { Block } from "@/types"
 import type { Category } from "@/types"
 
@@ -17,7 +18,7 @@ interface WeekGridProps {
   onNextWeek: () => void
   onToday: () => void
   onDayTap: (date: Date) => void
-  onToggleComplete: (id: string) => void
+  onToggleComplete: (id: string, confirmed?: boolean) => void
   onToggleMissed: (id: string) => void
 }
 
@@ -38,6 +39,7 @@ export function WeekGrid({
   onToggleMissed,
 }: WeekGridProps) {
   const [sortAsc, setSortAsc] = useState(true)
+  const [confirmBlock, setConfirmBlock] = useState<Block | null>(null)
   const days = useMemo(() => getWeekDays(currentDate), [currentDate])
 
   const dayData = useMemo(() => {
@@ -70,6 +72,18 @@ export function WeekGrid({
 
   const totalBlocks = dayData.reduce((s, d) => s + d.total, 0)
   const totalCompleted = dayData.reduce((s, d) => s + d.completed, 0)
+
+  const handleToggleComplete = (block: Block) => {
+    const taskDurationMins = calcDuration(block.startTime, block.endTime)
+    const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
+
+    if (!block.completed && totalFocusMins < taskDurationMins) {
+      setConfirmBlock(block)
+      return
+    }
+
+    onToggleComplete(block.id)
+  }
 
   return (
     <div className="space-y-4">
@@ -157,7 +171,7 @@ export function WeekGrid({
                       )}
                       {!isMissed && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); onToggleComplete(block.id) }}
+                          onClick={(e) => { e.stopPropagation(); handleToggleComplete(block) }}
                           className="shrink-0 text-sm leading-none"
                           aria-label={block.completed ? "Mark incomplete" : "Mark complete"}
                         >
@@ -184,6 +198,25 @@ export function WeekGrid({
           })()}
         </div>
       )}
+      <ConfirmDialog
+        open={confirmBlock !== null}
+        title="Konfirmasi selesai"
+        message={
+          confirmBlock
+            ? (() => {
+                const taskDurationMins = calcDuration(confirmBlock.startTime, confirmBlock.endTime)
+                const totalFocusMins = confirmBlock.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
+                const progressPercent = Math.round((totalFocusMins / taskDurationMins) * 100)
+                return `Task "${confirmBlock.title}" belum selesai! Progress: ${progressPercent}% (${totalFocusMins}/${taskDurationMins} menit)\n\nYakin ingin menandai selesai?`
+              })()
+            : ""
+        }
+        onConfirm={() => {
+          if (confirmBlock) onToggleComplete(confirmBlock.id, true)
+          setConfirmBlock(null)
+        }}
+        onCancel={() => setConfirmBlock(null)}
+      />
     </div>
   )
 }
