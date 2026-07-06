@@ -127,7 +127,7 @@ export function WeekGrid({
       {totalBlocks > 0 && (
         <div className="mt-6 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-text-secondary">All Blocks This Week</h3>
+            <h3 className="text-sm font-semibold text-text-secondary">All Blocks This Today</h3>
             <button
               onClick={() => setSortAsc(!sortAsc)}
               className="px-2 py-1 text-xs rounded-md font-medium bg-primary text-white transition-colors"
@@ -145,9 +145,11 @@ export function WeekGrid({
               return sortAsc ? diff : -diff
             })
 
+            const todayBlocks = sorted.filter(({ day }) => isToday(day))
+
             return (
               <div className="space-y-1">
-                {sorted.map(({ block, day }) => {
+                {todayBlocks.map(({ block, day }) => {
                   const color = block.color ?? categoryColors[block.categoryId] ?? "#6B7280"
                   const isMissed = block.missed && !block.completed
                   return (

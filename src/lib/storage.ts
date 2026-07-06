@@ -2,9 +2,31 @@ import { get, set, del } from "idb-keyval"
 import type { Block, Category, FocusSession, Settings } from "@/types"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "./constants"
 
+function deduplicateBlocks(blocks: Block[]): Block[] {
+  const seen = new Map<string, Block>()
+  for (const block of blocks) {
+    const key = `${block.date}|${block.startTime}|${block.endTime}|${block.title}`
+    const existing = seen.get(key)
+    if (!existing) {
+      seen.set(key, block)
+      continue
+    }
+    const existingScore = (existing.completed ? 1 : 0) + existing.focusSessions.length
+    const blockScore = (block.completed ? 1 : 0) + block.focusSessions.length
+    if (blockScore > existingScore || (blockScore === existingScore && block.updatedAt > existing.updatedAt)) {
+      seen.set(key, block)
+    }
+  }
+  return Array.from(seen.values())
+}
+
 export async function getBlocks(): Promise<Block[]> {
   const blocks = await get<Block[]>("blocks")
-  return blocks ?? []
+  const cleaned = deduplicateBlocks(blocks ?? [])
+  if (cleaned.length !== (blocks?.length ?? 0)) {
+    await setBlocks(cleaned)
+  }
+  return cleaned
 }
 
 export async function setBlocks(blocks: Block[]): Promise<void> {
@@ -22,7 +44,12 @@ export async function saveBlock(block: Block): Promise<void> {
   if (idx >= 0) {
     blocks[idx] = block
   } else {
-    blocks.push(block)
+    const isDuplicate = blocks.some(
+      (b) => b.date === block.date && b.startTime === block.startTime && b.endTime === block.endTime && b.title === block.title
+    )
+    if (!isDuplicate) {
+      blocks.push(block)
+    }
   }
   await setBlocks(blocks)
 }
