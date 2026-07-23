@@ -2,27 +2,27 @@
 
 import { useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/store/auth"
+import { useAuth } from "@clerk/nextjs"
 
 export function AuthGuard({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth()
+  const { isLoaded, isSignedIn } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (isLoaded && !isSignedIn) {
       router.replace("/sign-in")
     }
-  }, [user, loading, router])
+  }, [isLoaded, isSignedIn, router])
 
-  if (loading) {
+  if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-text-secondary">
+      <div className="flex items-center justify-center min-h-screen text-[#8A8F98]">
         Loading...
       </div>
     )
   }
 
-  if (!user) return null
+  if (!isSignedIn) return null
 
   return <>{children}</>
 }

@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useCallback, useState, useRef } from "react"
-import { Plus, Trash2 } from "lucide-react"
+import { useMemo, useCallback } from "react"
+import { Plus } from "lucide-react"
 import { DndContext, useDraggable, useDroppable, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { TimeBlock } from "./TimeBlock"
 import type { Block } from "@/types"
@@ -19,7 +19,6 @@ interface TimelineProps {
   onSlotTap: (time: string) => void
   onTimerClick: (id: string) => void
   onDragEnd: (blockId: string, newStartTime: string) => void
-  onDeleteBlock: (id: string) => void
 }
 
 function parseTime(t: string) {
@@ -33,13 +32,17 @@ function Slot({ time, hasBlocks, onTap }: { time: string; hasBlocks: boolean; on
   return (
     <div
       ref={setNodeRef}
-      className={`flex-1 relative border-t border-border transition-colors ${isOver ? "bg-primary/10" : ""}`}
-      style={{ minHeight: PX_PER_MIN * 30 }}
+      className="flex-1 relative transition-colors"
+      style={{
+        minHeight: PX_PER_MIN * 30,
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        background: isOver ? "rgba(94,106,210,0.1)" : undefined,
+      }}
     >
       {!hasBlocks && (
         <button
           onClick={() => onTap(time)}
-          className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-text-secondary hover:text-primary"
+          className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-[#8A8F98] hover:text-[#5E6AD2]"
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -53,15 +56,13 @@ function DraggableBlock({
   categoryColor,
   onTap,
   onTimerClick,
-  onDelete,
 }: {
   block: Block
   categoryColor: string
   onTap: (id: string) => void
   onTimerClick: (id: string) => void
-  onDelete: (id: string) => void
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { setNodeRef, transform, isDragging } = useDraggable({
     id: block.id,
     data: { block, categoryColor },
   })
@@ -70,52 +71,18 @@ function DraggableBlock({
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 50 }
     : undefined
 
-  const [swiped, setSwiped] = useState(false)
-  const touchStartX = useRef(0)
-  const touchStartY = useRef(0)
-
   return (
-    <div className="relative overflow-hidden h-full">
-      <div className="absolute inset-y-0 right-0 flex items-center bg-error text-white px-3 rounded-radius-md">
-        <button
-          onClick={() => onDelete(block.id)}
-          className="flex items-center gap-1 text-xs font-medium"
-          aria-label="Delete block"
-        >
-          <Trash2 className="w-3 h-3" /> Delete
-        </button>
-      </div>
-
-      <div
-        ref={setNodeRef}
-        style={{
-          ...style,
-          transform: swiped ? "translateX(-80px)" : style?.transform,
-        }}
-        className={`relative bg-surface transition-transform duration-200 h-full ${isDragging ? "opacity-30" : ""}`}
-        onTouchStart={(e) => {
-          touchStartX.current = e.touches[0].clientX
-          touchStartY.current = e.touches[0].clientY
-        }}
-        onTouchEnd={(e) => {
-          const dx = touchStartX.current - e.changedTouches[0].clientX
-          const dy = Math.abs(touchStartY.current - e.changedTouches[0].clientY)
-          if (dx > 60 && dx > dy * 1.5) {
-            setSwiped(true)
-          } else if (swiped && dx < -30) {
-            setSwiped(false)
-          } else if (!swiped) {
-            setSwiped(false)
-          }
-        }}
-      >
-        <TimeBlock
-          block={block}
-          categoryColor={categoryColor}
-          onTap={onTap}
-          onTimerClick={onTimerClick}
-        />
-      </div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative transition-transform duration-200 h-full ${isDragging ? "opacity-30" : ""}`}
+    >
+      <TimeBlock
+        block={block}
+        categoryColor={categoryColor}
+        onTap={onTap}
+        onTimerClick={onTimerClick}
+      />
     </div>
   )
 }
@@ -129,7 +96,6 @@ export function Timeline({
   onSlotTap,
   onTimerClick,
   onDragEnd,
-  onDeleteBlock,
 }: TimelineProps) {
   const dayStartMinutes = useMemo(() => parseTime(dayStart), [dayStart])
   const dayEndMinutes = useMemo(() => parseTime(dayEnd), [dayEnd])
@@ -241,7 +207,7 @@ export function Timeline({
               }}
             >
               <div className="w-14 shrink-0 pt-1 text-right pr-3">
-                <span className="font-mono text-time text-text-secondary tabular-nums">
+                <span className="font-mono text-xs text-[#8A8F98] tabular-nums">
                   {slot}
                 </span>
               </div>
@@ -269,7 +235,6 @@ export function Timeline({
               categoryColor={block.color ?? categoryColors[block.categoryId] ?? "#6B7280"}
               onTap={onBlockTap}
               onTimerClick={onTimerClick}
-              onDelete={onDeleteBlock}
             />
           </div>
         ))}

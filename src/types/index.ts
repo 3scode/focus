@@ -33,6 +33,22 @@ export interface FocusSession {
   completedAt: string
 }
 
+export interface Habit {
+  id: string
+  name: string
+  color: string
+  frequency: "daily" | "weekly"
+  order: number
+  createdAt: string
+}
+
+export interface HabitRecord {
+  id: string
+  habitId: string
+  date: string
+  completedAt: string
+}
+
 export interface Settings {
   dayStart: string
   dayEnd: string

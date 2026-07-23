@@ -22,14 +22,17 @@ export function CategoryChip({
       type="button"
       onClick={editable ? onEdit : onSelect}
       className={`
-        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-radius-full text-caption font-medium
+        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
         transition-all duration-150
         ${selected
           ? "text-white border-transparent"
-          : "bg-surface border border-border text-text-secondary hover:bg-background"
+          : "text-[#8A8F98] hover:text-[#EDEDEF]"
         }
       `}
-      style={selected ? { backgroundColor: color } : undefined}
+      style={selected ? { backgroundColor: color } : {
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.06)",
+      }}
     >
       <span
         className="w-2 h-2 rounded-full"

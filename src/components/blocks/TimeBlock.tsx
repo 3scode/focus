@@ -4,12 +4,14 @@ import { memo } from "react"
 import { CheckCircle2, Timer } from "lucide-react"
 import type { Block } from "@/types"
 import { formatDuration } from "@/lib/time"
+
 interface TimeBlockProps {
   block: Block
   categoryColor: string
   onTap: (id: string) => void
   onTimerClick?: (id: string) => void
 }
+
 export const TimeBlock = memo(function TimeBlock({
   block,
   categoryColor,
@@ -18,17 +20,10 @@ export const TimeBlock = memo(function TimeBlock({
 }: TimeBlockProps) {
   return (
     <div
-      className={`
-        group relative flex items-center gap-1.5 px-2 py-1 rounded-radius-md border-l-[4px] h-full
-        transition-all duration-150
-        hover:brightness-95
-        cursor-pointer active:scale-[0.98]
-        text-white
-        ${block.completed ? "opacity-60" : ""}
-      `}
+      className="group relative flex items-center gap-1.5 px-2 py-1 h-full cursor-pointer active:scale-[0.98] transition-all duration-200 text-white rounded-lg"
       style={{
-        borderLeftColor: categoryColor,
-        backgroundColor: categoryColor,
+        borderLeft: `3px solid ${categoryColor}`,
+        background: `linear-gradient(to right, ${categoryColor}40, ${categoryColor}20)`,
       }}
       onClick={() => onTap(block.id)}
       role="button"
@@ -38,14 +33,14 @@ export const TimeBlock = memo(function TimeBlock({
     >
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {block.completed && <CheckCircle2 className="w-3.5 h-3.5 text-white/90 shrink-0" />}
-        <span className="font-mono text-time text-white/80 tabular-nums whitespace-nowrap shrink-0">
+        <span className="font-mono text-xs text-white/80 tabular-nums whitespace-nowrap shrink-0">
           {block.startTime}—{block.endTime}
         </span>
         <span className="text-white/40 shrink-0">·</span>
-        <p className={`text-sm font-medium text-white truncate min-w-0 ${block.completed ? "line-through" : ""}`}>
+        <p className={`text-sm font-medium text-white truncate min-w-0 ${block.completed ? "line-through opacity-70" : ""}`}>
           {block.title}
         </p>
-        <span className="font-mono text-caption text-white/60 tabular-nums shrink-0">
+        <span className="font-mono text-xs text-white/60 tabular-nums shrink-0">
           {formatDuration(block.startTime, block.endTime)}
         </span>
         {!block.completed && onTimerClick && (

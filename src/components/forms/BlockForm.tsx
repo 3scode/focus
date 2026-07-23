@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { Clock, Trash2, Repeat } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -13,11 +13,11 @@ interface BlockFormProps {
   preselectedTime?: string
   selectedDate: string
   categories: Category[]
-  existingBlocks: Block[]
   onSubmit: (block: Block) => void
   onClose: () => void
   onDelete?: (id: string) => void
   onDeleteSeries?: (groupId: string) => void
+  onConvertToHabit?: (name: string, color: string) => Promise<void>
 }
 
 const COLOR_OPTIONS = [
@@ -31,11 +31,11 @@ export function BlockForm({
   preselectedTime,
   selectedDate,
   categories,
-  existingBlocks,
   onSubmit,
   onClose,
   onDelete,
   onDeleteSeries,
+  onConvertToHabit,
 }: BlockFormProps) {
   const initialStart = initialBlock?.startTime ?? preselectedTime ?? "09:00"
   const initialEnd = initialBlock?.endTime ?? calcEndTime(initialStart, 60)
@@ -226,7 +226,7 @@ export function BlockForm({
               <label className="block text-xs text-text-secondary mb-1">Repeats</label>
               <select
                 value={recurringPattern}
-                onChange={(e) => setRecurringPattern(e.target.value as any)}
+                onChange={(e) => setRecurringPattern(e.target.value as "daily" | "weekly")}
                 className="w-full px-2 py-1.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
               >
                 <option value="daily">Daily</option>
@@ -265,6 +265,22 @@ export function BlockForm({
         {initialBlock && onDelete && (
           <Button type="button" variant="ghost" className="text-error hover:text-error hover:bg-error/10 px-2" onClick={handleDelete}>
             <Trash2 className="w-4 h-4" />
+          </Button>
+        )}
+        {initialBlock && onConvertToHabit && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-[#10B981] hover:text-[#10B981] hover:bg-[#10B981]/10 px-2 text-xs"
+            onClick={() => {
+              const name = title.trim() || initialBlock.title
+              const color = blockColor || initialBlock.color || "#10B981"
+              onConvertToHabit(name, color)
+              onClose()
+            }}
+            title="Jadikan Habit"
+          >
+            +
           </Button>
         )}
         <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>

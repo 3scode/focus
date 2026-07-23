@@ -26,6 +26,7 @@ export function useTimer(initialMinutes: number, onComplete?: () => void) {
 
   useEffect(() => {
     clear()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTimeLeft(initialMinutes * 60)
     setIsRunning(false)
     setIsPaused(false)

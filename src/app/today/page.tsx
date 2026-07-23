@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { toast } from "sonner"
 import { addDays, subDays, format, parseISO } from "date-fns"
 import { AuthGuard } from "@/components/layout/AuthGuard"
 import { Timeline } from "@/components/blocks/Timeline"
@@ -134,14 +135,17 @@ function TodayContent() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 flex flex-col pb-16 md:pb-0">
-        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-4 py-3">
+        <header
+          className="sticky top-0 z-10 px-4 py-3"
+          style={{ background: "rgba(5,5,6,0.8)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
           <div className="flex items-center justify-between max-w-3xl mx-auto">
             <div className="flex items-center gap-2">
-              <button onClick={prevDay} className="p-1 rounded hover:bg-border text-text-secondary">
+              <button onClick={prevDay} className="p-1 rounded-lg hover:bg-white/[0.05] text-[#8A8F98]">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-base font-semibold">{formatDisplayDate(parseISO(currentDate))}</h1>
-              <button onClick={nextDay} className="p-1 rounded hover:bg-border text-text-secondary">
+              <h1 className="text-base font-semibold text-[#EDEDEF]">{formatDisplayDate(parseISO(currentDate))}</h1>
+              <button onClick={nextDay} className="p-1 rounded-lg hover:bg-white/[0.05] text-[#8A8F98]">
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
@@ -151,11 +155,11 @@ function TodayContent() {
         <div className="flex-1 max-w-3xl w-full mx-auto px-4 py-6 space-y-6">
           {blocks.length === 0 && !showForm ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-text-secondary mb-2">No blocks yet</p>
-              <p className="text-caption text-text-secondary mb-4">Plan your day by adding a time block</p>
+              <p className="text-[#8A8F98] mb-2">No blocks yet</p>
+              <p className="text-xs text-[#8A8F98] mb-4">Plan your day by adding a time block</p>
               <button
                 onClick={() => handleSlotTap("09:00")}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-radius-md text-sm font-medium hover:bg-primary-hover transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#5E6AD2] text-white rounded-lg text-sm font-medium hover:bg-[#6872D9] transition-colors shadow-[0_0_0_1px_rgba(94,106,210,0.5),0_4px_12px_rgba(94,106,210,0.3),inset_0_1px_0_0_rgba(255,255,255,0.2)]"
               >
                 <Plus className="w-4 h-4" />
                 Add Block
@@ -172,23 +176,25 @@ function TodayContent() {
                 onSlotTap={handleSlotTap}
                 onTimerClick={handleTimerClick}
                 onDragEnd={handleDragEnd}
-                onDeleteBlock={handleDeleteBlock}
               />
 
               {total > 0 && (
                 <div className="px-2">
                   <ProgressBar value={percentage} />
-                  <p className="text-caption text-text-secondary mt-1">{completed}/{total} completed</p>
+                  <p className="text-xs text-[#8A8F98] mt-1">{completed}/{total} completed</p>
                 </div>
               )}
 
               <button
                 onClick={() => handleSlotTap("09:00")}
-                className="fixed bottom-20 md:bottom-6 right-4 z-30 w-12 h-12 bg-primary text-white rounded-full shadow-lg
-                  hover:bg-primary-hover transition-colors flex items-center justify-center"
+                className="fixed bottom-20 md:bottom-6 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+                style={{
+                  background: "linear-gradient(to bottom, #5E6AD2, #4F5BCF)",
+                  boxShadow: "0 0 0 1px rgba(94,106,210,0.5), 0 4px 20px rgba(94,106,210,0.4), inset 0 1px 0 0 rgba(255,255,255,0.2)",
+                }}
                 aria-label="Add block"
               >
-                <Plus className="w-6 h-6" />
+                <Plus className="w-6 h-6 text-white" />
               </button>
             </>
           )}
@@ -206,10 +212,23 @@ function TodayContent() {
           preselectedTime={preselectedTime}
           selectedDate={currentDate}
           categories={categories}
-          existingBlocks={blocks}
           onSubmit={handleSubmit}
           onDelete={handleDeleteBlock}
           onDeleteSeries={handleDeleteSeries}
+          onConvertToHabit={async (name, color) => {
+            const uuidMod = await import("uuid")
+            const habits = await storage.getHabits()
+            const newHabit = {
+              id: uuidMod.v4(),
+              name,
+              color,
+              frequency: "daily" as const,
+              order: habits.length,
+              createdAt: new Date().toISOString(),
+            }
+            await storage.setHabits([...habits, newHabit])
+            toast.success(`"${name}" berhasil dijadikan habit`)
+          }}
           onClose={() => { setShowForm(false); setEditBlock(null); setPreselectedTime(undefined) }}
         />
       </Modal>

@@ -1,67 +1,51 @@
-import { get, set, del } from "idb-keyval"
-import type { Block, Category, FocusSession, Settings } from "@/types"
+import type { Block, Category, FocusSession, Habit, HabitRecord, Settings } from "@/types"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "./constants"
 
-function deduplicateBlocks(blocks: Block[]): Block[] {
-  const seen = new Map<string, Block>()
-  for (const block of blocks) {
-    const key = `${block.date}|${block.startTime}|${block.endTime}|${block.title}`
-    const existing = seen.get(key)
-    if (!existing) {
-      seen.set(key, block)
-      continue
-    }
-    const existingScore = (existing.completed ? 1 : 0) + existing.focusSessions.length
-    const blockScore = (block.completed ? 1 : 0) + block.focusSessions.length
-    if (blockScore > existingScore || (blockScore === existingScore && block.updatedAt > existing.updatedAt)) {
-      seen.set(key, block)
-    }
+type Method = "GET" | "POST" | "PUT" | "DELETE"
+
+async function api(url: string, method: Method = "GET", body?: unknown): Promise<any> {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Request failed" }))
+    throw new Error(err.error || `API error ${res.status}`)
   }
-  return Array.from(seen.values())
+  return res.json()
 }
 
 export async function getBlocks(): Promise<Block[]> {
-  const blocks = await get<Block[]>("blocks")
-  const cleaned = deduplicateBlocks(blocks ?? [])
-  if (cleaned.length !== (blocks?.length ?? 0)) {
-    await setBlocks(cleaned)
-  }
-  return cleaned
+  const data = await api("/api/blocks")
+  return data.map((b: any) => ({
+    ...b,
+    focusSessions: b.focusSessions ?? [],
+    completed: b.completed ?? false,
+  }))
+}
+
+export async function saveBlock(block: Block): Promise<void> {
+  await api("/api/blocks", "POST", block)
+}
+
+export async function deleteBlock(id: string): Promise<void> {
+  await api("/api/blocks", "DELETE", { id })
+}
+
+export async function deleteRecurringSeries(groupId: string): Promise<void> {
+  await api("/api/blocks/recurring", "DELETE", { groupId })
 }
 
 export async function setBlocks(blocks: Block[]): Promise<void> {
-  await set("blocks", blocks)
+  const existing = await getBlocks()
+  await Promise.all(existing.map((b) => deleteBlock(b.id)))
+  await Promise.all(blocks.map((b) => saveBlock(b)))
 }
 
 export async function getBlock(id: string): Promise<Block | null> {
   const blocks = await getBlocks()
   return blocks.find((b) => b.id === id) ?? null
-}
-
-export async function saveBlock(block: Block): Promise<void> {
-  const blocks = await getBlocks()
-  const idx = blocks.findIndex((b) => b.id === block.id)
-  if (idx >= 0) {
-    blocks[idx] = block
-  } else {
-    const isDuplicate = blocks.some(
-      (b) => b.date === block.date && b.startTime === block.startTime && b.endTime === block.endTime && b.title === block.title
-    )
-    if (!isDuplicate) {
-      blocks.push(block)
-    }
-  }
-  await setBlocks(blocks)
-}
-
-export async function deleteBlock(id: string): Promise<void> {
-  const blocks = await getBlocks()
-  await setBlocks(blocks.filter((b) => b.id !== id))
-}
-
-export async function deleteRecurringSeries(groupId: string): Promise<void> {
-  const blocks = await getBlocks()
-  await setBlocks(blocks.filter((b) => b.recurringGroupId !== groupId))
 }
 
 export async function getBlocksByDate(date: string): Promise<Block[]> {
@@ -72,41 +56,71 @@ export async function getBlocksByDate(date: string): Promise<Block[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const cats = await get<Category[]>("categories")
-  return cats ?? DEFAULT_CATEGORIES
+  const data = await api("/api/categories")
+  return data.length > 0 ? data : DEFAULT_CATEGORIES
 }
 
 export async function setCategories(cats: Category[]): Promise<void> {
-  await set("categories", cats)
+  await api("/api/categories", "POST", cats)
 }
 
 export async function getFocusSessions(): Promise<FocusSession[]> {
-  const sessions = await get<FocusSession[]>("focusSessions")
-  return sessions ?? []
+  return api("/api/focus-sessions")
 }
 
 export async function setFocusSessions(sessions: FocusSession[]): Promise<void> {
-  await set("focusSessions", sessions)
+  await api("/api/focus-sessions", "PUT", sessions)
 }
 
 export async function saveFocusSession(session: FocusSession): Promise<void> {
-  const sessions = await getFocusSessions()
-  sessions.push(session)
-  await setFocusSessions(sessions)
+  await api("/api/focus-sessions", "POST", session)
 }
 
 export async function getSettings(): Promise<Settings> {
-  const settings = await get<Settings>("settings")
-  return settings ?? DEFAULT_SETTINGS
+  const data = await api("/api/settings")
+  return data ?? DEFAULT_SETTINGS
 }
 
-export async function setSettings(settings: Settings): Promise<void> {
-  await set("settings", settings)
+export async function setSettings(s: Partial<Settings>): Promise<void> {
+  await api("/api/settings", "POST", s)
+}
+
+export async function getHabits(): Promise<Habit[]> {
+  return api("/api/habits")
+}
+
+export async function setHabits(h: Habit[]): Promise<void> {
+  await api("/api/habits", "PUT", h)
+}
+
+export async function addHabit(habit: Habit): Promise<void> {
+  await api("/api/habits", "POST", habit)
+}
+
+export async function deleteHabit(id: string): Promise<void> {
+  await api(`/api/habits/${id}`, "DELETE")
+}
+
+export async function getHabitRecords(): Promise<HabitRecord[]> {
+  return api("/api/habit-records")
+}
+
+export async function setHabitRecords(records: HabitRecord[]): Promise<void> {
+  await api("/api/habit-records", "PUT", records)
+}
+
+export async function saveHabitRecord(record: HabitRecord): Promise<void> {
+  await api("/api/habit-records", "POST", record)
+}
+
+export async function deleteHabitRecord(id: string): Promise<void> {
+  await api("/api/habit-records", "DELETE", { id })
 }
 
 export async function clearAllData(): Promise<void> {
-  await del("blocks")
-  await del("categories")
-  await del("focusSessions")
-  await del("settings")
+  const [blocks, habits] = await Promise.all([getBlocks(), getHabits()])
+  await Promise.all(blocks.map((b) => deleteBlock(b.id)))
+  await Promise.all(habits.map((h) => deleteHabit(h.id)))
+  await api("/api/categories", "POST", [])
+  await api("/api/settings", "POST", DEFAULT_SETTINGS)
 }

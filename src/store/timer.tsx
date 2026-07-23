@@ -178,6 +178,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     const threshold = defaultTimer * 60
     const completed = Math.floor(elapsed / threshold)
     if (completed > completedSessions) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCompletedSessions(completed)
       try {
         const ctx = new AudioContext()

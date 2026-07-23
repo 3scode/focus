@@ -104,42 +104,51 @@ function SettingsContent() {
     setShowClearConfirm(false)
   }, [clearData])
 
-  const toggleTheme = useCallback(() => {
-    const next = settings.theme === "light" ? "dark" : "light"
-    updateSettings({ ...settings, theme: next })
-    document.documentElement.classList.toggle("dark", next === "dark")
-  }, [settings, updateSettings])
-
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 pb-16 md:pb-0">
         <div className="max-w-xl mx-auto px-4 py-6 space-y-8">
-          <h1 className="text-lg font-semibold">Settings</h1>
+          <h1 className="text-lg font-semibold text-[#EDEDEF]">Settings</h1>
 
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-text-secondary">Categories</h2>
-              <button onClick={handleAddCategory} className="p-1 rounded hover:bg-border text-text-secondary">
+              <h2 className="text-sm font-semibold text-[#8A8F98]">Categories</h2>
+              <button onClick={handleAddCategory} className="p-1 rounded-lg hover:bg-white/[0.05] text-[#8A8F98]">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
             <div className="space-y-2">
               {localCats.map((cat) => (
-                <div key={cat.id} className="flex items-center gap-2 px-3 py-2 bg-surface rounded-radius-md border border-border">
+                <div
+                  key={cat.id}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                  style={{
+                    background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                  }}
+                >
                   <div className="relative">
                     <div
-                      className="w-6 h-6 rounded-full cursor-pointer border-2 border-border"
+                      className="w-6 h-6 rounded-full cursor-pointer border-2 border-white/[0.1]"
                       style={{ backgroundColor: cat.color }}
                       onClick={() => { if (editingCat === cat.id) { setEditingCat(null); setPendingColor(null) } else { setEditingCat(cat.id); setPendingColor(cat.color) } }}
                     />
                     {editingCat === cat.id && (
-                      <div className="absolute top-8 left-0 z-10 bg-surface rounded-radius-md border border-border shadow-md p-3 space-y-3">
+                      <div
+                        className="absolute top-8 left-0 z-10 p-3 space-y-3 rounded-xl"
+                        style={{
+                          background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                          boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 8px 40px rgba(0,0,0,0.5)",
+                        }}
+                      >
                         <div className="grid grid-cols-4 gap-1">
                           {SWATCHES.map((s) => (
                             <button
                               key={s}
-                              className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${pendingColor === s ? "border-primary scale-110" : "border-border"}`}
+                              className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${pendingColor === s ? "border-[#5E6AD2] scale-110" : "border-white/[0.1]"}`}
                               style={{ backgroundColor: s }}
                               onClick={() => setPendingColor(s)}
                             />
@@ -147,13 +156,14 @@ function SettingsContent() {
                         </div>
                         <div className="flex justify-center gap-2">
                           <button
-                            className="px-4 py-1.5 text-sm font-medium text-text-secondary hover:text-text-primary bg-background rounded-radius-md border border-border hover:bg-border transition-colors"
+                            className="px-4 py-1.5 text-sm font-medium text-[#8A8F98] hover:text-[#EDEDEF] rounded-lg transition-colors"
+                            style={{ background: "rgba(255,255,255,0.05)" }}
                             onClick={() => { setEditingCat(null); setPendingColor(null) }}
                           >
                             Cancel
                           </button>
                           <button
-                            className="px-4 py-1.5 text-sm font-medium text-white bg-primary rounded-radius-md hover:bg-primary-hover transition-colors"
+                            className="px-4 py-1.5 text-sm font-medium text-white rounded-lg transition-colors bg-[#5E6AD2] hover:bg-[#6872D9]"
                             onClick={() => { if (pendingColor) handleEditColor(cat.id, pendingColor); setEditingCat(null); setPendingColor(null) }}
                           >
                             OK
@@ -166,11 +176,11 @@ function SettingsContent() {
                     type="text"
                     value={cat.name}
                     onChange={(e) => handleEditName(cat.id, e.target.value)}
-                    className="flex-1 bg-transparent text-sm text-text-primary focus:outline-none border-b border-transparent focus:border-primary"
+                    className="flex-1 bg-transparent text-sm text-[#EDEDEF] focus:outline-none border-b border-transparent focus:border-[#5E6AD2]"
                   />
                   <button
                     onClick={() => handleDeleteCategory(cat.id)}
-                    className="p-1 rounded hover:bg-background text-text-secondary hover:text-error transition-colors"
+                    className="p-1 rounded hover:bg-white/[0.05] text-[#8A8F98] hover:text-[#EF4444] transition-colors"
                     disabled={localCats.length <= 1}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -181,60 +191,81 @@ function SettingsContent() {
           </section>
 
           <section>
-            <h2 className="text-sm font-semibold text-text-secondary mb-3">Preferences</h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-3 py-2 bg-surface rounded-radius-md border border-border">
-                <span className="text-sm">Day start</span>
+            <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">Preferences</h2>
+            <div className="space-y-2">
+              <div
+                className="flex items-center justify-between px-3 py-2 rounded-lg"
+                style={{
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                }}
+              >
+                <span className="text-sm text-[#EDEDEF]">Day start</span>
                 <input
                   type="time"
                   value={settings.dayStart ?? "08:00"}
                   onChange={(e) => updateSettings({ ...settings, dayStart: e.target.value })}
-                  className="font-mono text-sm bg-transparent text-text-primary focus:outline-none"
+                  className="font-mono text-sm bg-transparent text-[#EDEDEF] focus:outline-none"
                 />
               </div>
-              <div className="flex items-center justify-between px-3 py-2 bg-surface rounded-radius-md border border-border">
-                <span className="text-sm">Day end</span>
+              <div
+                className="flex items-center justify-between px-3 py-2 rounded-lg"
+                style={{
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                }}
+              >
+                <span className="text-sm text-[#EDEDEF]">Day end</span>
                 <input
                   type="time"
                   value={settings.dayEnd ?? "18:00"}
                   onChange={(e) => updateSettings({ ...settings, dayEnd: e.target.value })}
-                  className="font-mono text-sm bg-transparent text-text-primary focus:outline-none"
+                  className="font-mono text-sm bg-transparent text-[#EDEDEF] focus:outline-none"
                 />
               </div>
-              <div className="flex items-center justify-between px-3 py-2 bg-surface rounded-radius-md border border-border">
-                <span className="text-sm">Focus timer (min)</span>
+              <div
+                className="flex items-center justify-between px-3 py-2 rounded-lg"
+                style={{
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                }}
+              >
+                <span className="text-sm text-[#EDEDEF]">Focus timer (min)</span>
                 <input
                   type="number"
                   min={5}
                   max={120}
                   value={settings.defaultTimer ?? 25}
                   onChange={(e) => updateSettings({ ...settings, defaultTimer: parseInt(e.target.value) || 25 })}
-                  className="font-mono text-sm bg-transparent text-text-primary focus:outline-none w-16 text-right"
+                  className="font-mono text-sm bg-transparent text-[#EDEDEF] focus:outline-none w-16 text-right"
                 />
               </div>
-              <div className="flex items-center justify-between px-3 py-2 bg-surface rounded-radius-md border border-border">
-                <span className="text-sm">Break (min)</span>
+              <div
+                className="flex items-center justify-between px-3 py-2 rounded-lg"
+                style={{
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                }}
+              >
+                <span className="text-sm text-[#EDEDEF]">Break (min)</span>
                 <input
                   type="number"
                   min={1}
                   max={30}
                   value={settings.breakDuration ?? 5}
                   onChange={(e) => updateSettings({ ...settings, breakDuration: parseInt(e.target.value) || 5 })}
-                  className="font-mono text-sm bg-transparent text-text-primary focus:outline-none w-16 text-right"
+                  className="font-mono text-sm bg-transparent text-[#EDEDEF] focus:outline-none w-16 text-right"
                 />
-              </div>
-              <div className="flex items-center justify-between px-3 py-2 bg-surface rounded-radius-md border border-border">
-                <span className="text-sm">Theme</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" checked={settings.theme === "dark"} onChange={toggleTheme} />
-                  <div className="w-9 h-5 bg-border rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
-                </label>
               </div>
             </div>
           </section>
 
           <section>
-            <h2 className="text-sm font-semibold text-text-secondary mb-3">Data</h2>
+            <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">Data</h2>
             <div className="space-y-2">
               <Button variant="secondary" className="w-full justify-start" onClick={handleImport}>
                 <Upload className="w-4 h-4" /> Import Data
@@ -243,7 +274,7 @@ function SettingsContent() {
               <Button variant="secondary" className="w-full justify-start" onClick={handleExport}>
                 <Download className="w-4 h-4" /> Export Data
               </Button>
-              <Button variant="ghost" className="w-full justify-start text-error hover:text-error" onClick={() => setShowClearConfirm(true)}>
+              <Button variant="ghost" className="w-full justify-start text-[#EF4444] hover:text-[#EF4444]" onClick={() => setShowClearConfirm(true)}>
                 <AlertTriangle className="w-4 h-4" /> Clear All Data
               </Button>
             </div>
@@ -254,10 +285,10 @@ function SettingsContent() {
 
       <Modal open={showClearConfirm} title="Clear All Data?" onClose={() => setShowClearConfirm(false)}>
         <div className="space-y-4">
-          <p className="text-sm text-text-secondary">This will permanently delete all your blocks, categories, and settings. This action cannot be undone.</p>
+          <p className="text-sm text-[#8A8F98]">This will permanently delete all your blocks, categories, and settings. This action cannot be undone.</p>
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1" onClick={() => setShowClearConfirm(false)}>Cancel</Button>
-            <Button className="flex-1 bg-error hover:bg-red-600" onClick={handleClear}>Clear Everything</Button>
+            <Button className="flex-1" onClick={handleClear} style={{ background: "#EF4444" }}>Clear Everything</Button>
           </div>
         </div>
       </Modal>

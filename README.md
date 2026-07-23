@@ -1,56 +1,50 @@
-# TimeBlock
+# Time Blocking
 
-A simple, visual time blocking web app for daily planning — drag & drop your schedule, track focus sessions, and review your day.
+Aplikasi time blocking PWA berbasis web untuk perencanaan harian yang visual, modern, dan offline penuh.
 
-## Features
+## Fitur
 
-- **Home Page** — Landing page with app overview and call-to-action.
-- **Authentication** — Sign-up and sign-in with local storage (password hashed with SHA-256).
-- **Today View** — Vertical timeline with drag-and-drop blocks. Block height dynamically matches its duration.
-- **Weekly View** — 7-day grid with a full list of the week's blocks below.
-- **Recurring Blocks** — Set blocks to repeat daily or weekly, with an option to delete the entire series.
-- **Focus Timer** — Stopwatch-based Pomodoro timer linked to your time blocks. Break time is proportional to actual focus duration. Beep sound at each session milestone.
-- **Persistent Timer** — Timer keeps running even when navigating between pages. Floating timer bar at the bottom lets you control pause/stop from anywhere.
-- **One-Click Break** — "Rest" button starts a break without stopping focus; "Stop" saves focus and returns to idle without break.
-- **Session Tracking** — Each focus session is recorded per block with duration and timestamp.
-- **Daily Review** — Review completed and missed blocks, reschedule unfinished tasks. Per-task progress bars show focus time vs scheduled duration, including the currently running session in real-time.
-- **Live Timer Status** — Active timer shown as a stat card in the Review page with task name and elapsed time.
-- **Categories & Theming** — Color-coded categories that style each block for better visual organization.
-- **Dark Mode** — Toggle between light and dark themes.
-- **Export/Import** — Export and import your categories and settings as JSON.
-- **Fully Offline** — All data stored in your browser (IndexedDB + localStorage).
+- **Landing Page** — Halaman depan dengan hero gradient, bento grid, dan call-to-action.
+- **Autentikasi** — Sign-up dan sign-in dengan Clerk (Google OAuth + email/password).
+- **Hari Ini** — Timeline vertikal dengan drag-and-drop block. Tinggi block otomatis sesuai durasi.
+- **Mingguan** — Grid 7 hari dengan daftar lengkap block minggu ini.
+- **Recurring Block** — Block berulang harian/mingguan dengan opsi hapus seluruh seri.
+- **Focus Timer** — Timer Pomodoro berbasis stopwatch yang terhubung dengan time block. Break proporsional dengan durasi fokus. Bip di setiap milestone.
+- **Timer Persisten** — Timer tetap jalan saat navigasi halaman. Floating timer bar di bawah untuk pause/stop dari mana saja.
+- **One-Click Break** — Tombol "Rest" mulai break tanpa stop fokus; "Stop" simpan fokus dan kembali idle.
+- **Sesi Tracking** — Setiap sesi fokus tercatat per block dengan durasi dan timestamp.
+- **Daily Review** — Review block selesai/missed, reschedule task. Progress bar per task menunjukkan waktu fokus vs durasi terjadwal, termasuk sesi yang sedang berjalan secara real-time.
+- **Habit Tracker** — Halaman khusus habits dengan checklist harian, streak counter, grafik completion 7/14/30 hari, dan riwayat per habit.
+- **Kategori & Warna** — Kategori dengan kode warna yang memberi style setiap block.
+- **Dark Mode Permanen** — Selalu dark mode dengan desain system Linear (near-black, glass morphism, accent #5E6AD2).
+- **Export/Import** — Export dan import data (blocks, kategori, settings, focus sessions) sebagai JSON.
+- **Offline Penuh** — Semua data di IndexedDB + localStorage, service worker untuk installabilitas PWA.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
+| Layer | Teknologi |
+|-------|-----------|
 | Frontend | Next.js 16 (App Router) |
-| Language | TypeScript |
+| Bahasa | TypeScript |
 | Styling | Tailwind CSS 4 |
-| Icons | Lucide React |
+| Ikon | Lucide React |
 | Drag & Drop | dnd-kit |
+| Auth | Clerk |
 | Storage | IndexedDB (idb-keyval) + localStorage |
-| Auth | Custom local auth with SHA-256 |
 | PWA | Web App Manifest + Service Worker |
 
-## Getting Started
+## Memulai
 
 ```bash
-npm install
-npm run dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Build
-
-```bash
-npm run build
-```
+> ⚠️ Jangan jalankan `bun run dev` atau `bun run build` tanpa persetujuan dari author. Tanyakan dulu sebelum menjalankan perintah tersebut.
+> Commit dan push messages **wajib menggunakan Bahasa Indonesia**.
 
 ## Author
 
-**Created by Trisno Sanjaya**
+**Created by Trisno Sanjaya** — [3SCODE](https://3scode.my.id)
 
 ## License
 

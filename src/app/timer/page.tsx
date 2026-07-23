@@ -33,33 +33,44 @@ function TaskSelector({ onSelect }: { onSelect: (id: string) => void }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-background border border-border
-          text-sm font-medium hover:border-text-secondary/30 transition-colors"
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-[#8A8F98]"
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.05)",
+        }}
       >
-        <span className="text-text-secondary">Select a task</span>
-        <ChevronDown className="w-4 h-4 text-text-secondary" />
+        <span>Select a task</span>
+        <ChevronDown className="w-4 h-4" />
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full mt-1 left-0 right-0 z-20 bg-surface border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto">
+          <div
+            className="absolute top-full mt-1 left-0 right-0 z-20 max-h-60 overflow-y-auto rounded-xl"
+            style={{
+              background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+              border: "1px solid rgba(255,255,255,0.06)",
+              boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 8px 40px rgba(0,0,0,0.5)",
+            }}
+          >
             {todayBlocks.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-text-secondary text-center">No tasks for today</div>
+              <div className="px-4 py-3 text-sm text-[#8A8F98] text-center">No tasks for today</div>
             ) : (
               todayBlocks.map((b) => (
                 <button
                   key={b.id}
                   type="button"
                   onClick={() => { onSelect(b.id); setOpen(false) }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-background transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-white/[0.05] transition-colors text-left"
                 >
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: b.categoryColor }} />
                   <div className="flex-1 min-w-0">
-                    <span className="font-medium truncate block">{b.title}</span>
-                    <span className="text-caption text-text-secondary">{b.startTime} — {b.endTime}</span>
+                    <span className="font-medium text-[#EDEDEF] truncate block">{b.title}</span>
+                    <span className="text-xs text-[#8A8F98]">{b.startTime} — {b.endTime}</span>
                   </div>
-                  <span className="text-caption text-text-secondary">{b.categoryName}</span>
+                  <span className="text-xs text-[#8A8F98]">{b.categoryName}</span>
                 </button>
               ))
             )}
@@ -72,12 +83,10 @@ function TaskSelector({ onSelect }: { onSelect: (id: string) => void }) {
 
 function TimerContent() {
   const router = useRouter()
-  const { blocks, activeBlockId, setActiveBlockId, addFocusSession, categories, settings } = useApp()
+  const { blocks, activeBlockId, setActiveBlockId, addFocusSession, categories } = useApp()
   const timerCtx = useTimerContext()
 
   const today = formatDate(new Date())
-  const defaultTimer = settings.defaultTimer ?? 25
-  const breakDuration = settings.breakDuration ?? 5
   const block = useMemo(() => blocks.find((b) => b.id === activeBlockId), [blocks, activeBlockId])
 
   const catMap = useMemo(() => new Map(categories.map((c) => [c.id, { name: c.name, color: c.color }])), [categories])
@@ -87,13 +96,13 @@ function TimerContent() {
 
   const taskProgress = useMemo(() => {
     if (timerCtx.phase !== "focus" || !block) return { percent: 0, current: 0, total: 0 }
-    
+
     const taskDurationMins = calcDuration(block.startTime, block.endTime)
     const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
     const currentElapsedMins = Math.floor(timerCtx.elapsed / 60)
     const currentTotal = totalFocusMins + currentElapsedMins
     const percent = Math.round((currentTotal / taskDurationMins) * 100)
-    
+
     return { percent, current: currentTotal, total: taskDurationMins }
   }, [timerCtx.phase, block, timerCtx.elapsed])
 
@@ -137,9 +146,9 @@ function TimerContent() {
     const totalSeconds = timerCtx.stopFocus()
     const mins = Math.round(totalSeconds / 60)
     await saveAndReset(totalSeconds)
-    const breakMins = Math.max(1, Math.round(mins * breakDuration / defaultTimer))
+    const breakMins = Math.max(1, Math.round(mins * 5 / 25))
     timerCtx.startBreak(breakMins)
-  }, [timerCtx, saveAndReset, breakDuration, defaultTimer])
+  }, [timerCtx, saveAndReset])
 
   const handleSkipFocus = useCallback(() => {
     timerCtx.skipFocus()
@@ -184,14 +193,14 @@ function TimerContent() {
       <main className="flex-1 flex flex-col items-center justify-center pb-16 md:pb-0 px-4">
         <div className="flex flex-col items-center gap-8 max-w-sm w-full">
           <div className="self-end">
-            <button onClick={handleClose} className="p-2 rounded-full hover:bg-border text-text-secondary" aria-label="Close">
+            <button onClick={handleClose} className="p-2 rounded-full hover:bg-white/[0.05] text-[#8A8F98]" aria-label="Close">
               <X className="w-6 h-6" />
             </button>
           </div>
 
           {(phase === "idle") && !block && (
             <div className="w-full space-y-3">
-              <div className="flex items-center gap-2 justify-center text-text-secondary">
+              <div className="flex items-center gap-2 justify-center text-[#8A8F98]">
                 <ListTodo className="w-5 h-5" />
                 <span className="text-sm font-medium">Choose a task to focus on</span>
               </div>
@@ -202,10 +211,10 @@ function TimerContent() {
           {(phase === "idle") && block && (
             <div className="text-center space-y-4">
               <div className="space-y-1">
-                <p className="text-sm font-medium">{block.title}</p>
-                <p className="text-caption text-text-secondary">{block.startTime} — {block.endTime} • {formatDuration(block.startTime, block.endTime)}</p>
+                <p className="text-sm font-medium text-[#EDEDEF]">{block.title}</p>
+                <p className="text-xs text-[#8A8F98]">{block.startTime} — {block.endTime} • {formatDuration(block.startTime, block.endTime)}</p>
                 {blockCategory && (
-                  <span className="inline-block px-2 py-0.5 rounded-full text-caption text-white mt-1" style={{ backgroundColor: blockCategory.color }}>
+                  <span className="inline-block px-2 py-0.5 rounded-full text-xs text-white mt-1" style={{ backgroundColor: blockCategory.color }}>
                     {blockCategory.name}
                   </span>
                 )}
@@ -218,9 +227,9 @@ function TimerContent() {
 
           {phase === "focus" && (
             <div className="text-center space-y-1">
-              <p className="text-sm font-medium">{block?.title}</p>
+              <p className="text-sm font-medium text-[#EDEDEF]">{block?.title}</p>
               {blockCategory && (
-                <span className="inline-block px-2 py-0.5 rounded-full text-caption text-white" style={{ backgroundColor: blockCategory.color }}>
+                <span className="inline-block px-2 py-0.5 rounded-full text-xs text-white" style={{ backgroundColor: blockCategory.color }}>
                   {blockCategory.name}
                 </span>
               )}
@@ -229,31 +238,34 @@ function TimerContent() {
 
           {phase === "break" && (
             <div className="text-center space-y-2">
-              <div className="flex items-center gap-2 justify-center text-secondary">
+              <div className="flex items-center gap-2 justify-center text-[#F59E0B]">
                 <Coffee className="w-5 h-5" />
                 <p className="text-sm font-medium">Break Time</p>
               </div>
-              <p className="text-caption text-text-secondary">Focused for {timerCtx.focusMinutes}m — take a short break</p>
+              <p className="text-xs text-[#8A8F98]">Focused for {timerCtx.focusMinutes}m — take a short break</p>
             </div>
           )}
 
           <div className="relative">
             <svg className="w-64 h-64 -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="var(--color-border)" strokeWidth="6" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
               <circle
                 cx="50" cy="50" r="45"
                 fill="none"
-                stroke={isBreakPhase ? "var(--color-secondary)" : "var(--color-primary)"}
+                stroke={isBreakPhase ? "#F59E0B" : "#5E6AD2"}
                 strokeWidth="6"
                 strokeDasharray={`${2 * Math.PI * 45}`}
                 strokeDashoffset={`${2 * Math.PI * 45 * (1 - (isBreakPhase ? timerCtx.breakProgress : timerCtx.stopwatchProgress) / 100)}`}
                 strokeLinecap="round"
                 className="transition-all duration-1000 ease-linear"
+                style={{
+                  filter: isBreakPhase ? "none" : "drop-shadow(0 0 8px rgba(94,106,210,0.3))",
+                }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-bold tabular-nums tracking-tight">{minutesStr}:{secondsStr}</span>
-              <span className="text-sm text-text-secondary mt-1">
+              <span className="text-5xl font-bold tabular-nums tracking-tight text-[#EDEDEF]">{minutesStr}:{secondsStr}</span>
+              <span className="text-sm text-[#8A8F98] mt-1">
                 {isBreakPhase ? "Break" : timerRunning ? "Focus Time" : timerCtx.elapsed > 0 ? "Paused" : "Ready"}
                 {phase === "focus" && timerCtx.completedSessions > 0 && <span className="ml-2">• {timerCtx.completedSessions} sesi</span>}
               </span>
@@ -262,13 +274,13 @@ function TimerContent() {
 
           {phase === "focus" && block && (
             <div className="w-full max-w-xs space-y-2">
-              <div className="w-full bg-border rounded-full h-2 overflow-hidden">
-                <div 
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${Math.min(taskProgress.percent, 100)}%` }}
+              <div className="w-full rounded-full h-2 overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(taskProgress.percent, 100)}%`, background: "#5E6AD2" }}
                 />
               </div>
-              <p className="text-caption text-text-secondary text-center">
+              <p className="text-xs text-[#8A8F98] text-center">
                 Progress: {taskProgress.percent}% ({taskProgress.current}/{taskProgress.total} min)
               </p>
             </div>
@@ -282,13 +294,16 @@ function TimerContent() {
 
               <button
                 onClick={togglePlayPause}
-                className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center
-                  hover:bg-primary-hover transition-colors shadow-lg active:scale-95"
+                className="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+                style={{
+                  background: "linear-gradient(to bottom, #5E6AD2, #4F5BCF)",
+                  boxShadow: "0 0 0 1px rgba(94,106,210,0.5), 0 4px 20px rgba(94,106,210,0.4), inset 0 1px 0 0 rgba(255,255,255,0.2)",
+                }}
                 aria-label={isBreakPhase ? (isPaused ? "Play" : "Pause") : (isPaused ? "Play" : "Pause")}
               >
                 {(timerRunning)
-                  ? <Pause className="w-7 h-7" />
-                  : <Play className="w-7 h-7 ml-0.5" />
+                  ? <Pause className="w-7 h-7 text-white" />
+                  : <Play className="w-7 h-7 text-white ml-0.5" />
                 }
               </button>
 
@@ -304,8 +319,8 @@ function TimerContent() {
           )}
 
           {phase === "idle" && !block && (
-            <p className="text-caption text-text-secondary text-center">
-              Default timer: {defaultTimer} min
+            <p className="text-xs text-[#8A8F98] text-center">
+              Default timer: 25 min
             </p>
           )}
         </div>

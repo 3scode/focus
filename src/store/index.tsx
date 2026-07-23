@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react"
-import type { Block, Category, FocusSession, Settings } from "@/types"
+import type { Block, Category, FocusSession, Habit, HabitRecord, Settings } from "@/types"
 import * as storage from "@/lib/storage"
 import { formatDate, calcDuration } from "@/lib/time"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/constants"
@@ -10,6 +10,8 @@ import { toast } from "sonner"
 interface AppState {
   blocks: Block[]
   categories: Category[]
+  habits: Habit[]
+  habitRecords: HabitRecord[]
   settings: Settings
   selectedDate: string
   loading: boolean
@@ -27,6 +29,11 @@ interface AppContextValue extends AppState {
   updateCategories: (cats: Category[]) => Promise<void>
   updateSettings: (settings: Settings) => Promise<void>
   addFocusSession: (session: FocusSession) => Promise<void>
+  setHabits: (habits: Habit[]) => Promise<void>
+  addHabit: (habit: Habit) => Promise<void>
+  deleteHabit: (id: string) => Promise<void>
+  addHabitRecord: (record: HabitRecord) => Promise<void>
+  deleteHabitRecord: (id: string) => Promise<void>
   clearData: () => Promise<void>
   activeBlockId: string | null
   setActiveBlockId: (id: string | null) => void
@@ -37,6 +44,8 @@ const AppContext = createContext<AppContextValue | null>(null)
 export function AppProvider({ children }: { children: ReactNode }) {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [categories, setCats] = useState<Category[]>(DEFAULT_CATEGORIES)
+  const [habits, setHabitsState] = useState<Habit[]>([])
+  const [habitRecords, setHabitRecordsState] = useState<HabitRecord[]>([])
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS)
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()))
   const [loading, setLoading] = useState(true)
@@ -45,14 +54,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true
     ;(async () => {
-      const [b, c, s] = await Promise.all([
+      const [b, c, h, hr, s] = await Promise.all([
         storage.getBlocks(),
         storage.getCategories(),
+        storage.getHabits(),
+        storage.getHabitRecords(),
         storage.getSettings(),
       ])
       if (!mounted) return
       setBlocks(b)
       setCats(c)
+      setHabitsState(h)
+      setHabitRecordsState(hr)
       setSettingsState(s)
       document.documentElement.classList.toggle("dark", s.theme === "dark")
       setLoading(false)
@@ -148,14 +161,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const setHabits = useCallback(async (h: Habit[]) => {
+    await storage.setHabits(h)
+    setHabitsState(h)
+  }, [])
+
+  const addHabit = useCallback(async (habit: Habit) => {
+    const h = await storage.getHabits()
+    h.push(habit)
+    await storage.setHabits(h)
+    setHabitsState(h)
+  }, [])
+
+  const deleteHabit = useCallback(async (id: string) => {
+    const h = await storage.getHabits()
+    const filtered = h.filter((hab) => hab.id !== id)
+    await storage.setHabits(filtered)
+    setHabitsState(filtered)
+    const records = await storage.getHabitRecords()
+    const filteredRecords = records.filter((r) => r.habitId !== id)
+    await storage.setHabitRecords(filteredRecords)
+    setHabitRecordsState(filteredRecords)
+  }, [])
+
+  const addHabitRecord = useCallback(async (record: HabitRecord) => {
+    await storage.saveHabitRecord(record)
+    setHabitRecordsState((prev) => [...prev, record])
+  }, [])
+
+  const deleteHabitRecord = useCallback(async (id: string) => {
+    await storage.deleteHabitRecord(id)
+    setHabitRecordsState((prev) => prev.filter((r) => r.id !== id))
+  }, [])
+
   const refresh = useCallback(async () => {
-    const [b, c, s] = await Promise.all([
+    const [b, c, h, hr, s] = await Promise.all([
       storage.getBlocks(),
       storage.getCategories(),
+      storage.getHabits(),
+      storage.getHabitRecords(),
       storage.getSettings(),
     ])
     setBlocks(b)
     setCats(c)
+    setHabitsState(h)
+    setHabitRecordsState(hr)
     setSettingsState(s)
     setLoading(false)
   }, [])
@@ -164,16 +214,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await storage.clearAllData()
     setBlocks([])
     setCats(DEFAULT_CATEGORIES)
+    setHabitsState([])
+    setHabitRecordsState([])
     setSettingsState(DEFAULT_SETTINGS)
   }, [])
 
   return (
     <AppContext.Provider
       value={{
-        blocks, categories, settings, selectedDate, loading,
+        blocks, categories, habits, habitRecords, settings, selectedDate, loading,
         refresh, setSelectedDate, addBlock, updateBlock, removeBlock, removeRecurringSeries,
         toggleBlockComplete, toggleBlockMissed, updateCategories, updateSettings,
-        addFocusSession, clearData,
+        addFocusSession, setHabits, addHabit, deleteHabit, addHabitRecord, deleteHabitRecord, clearData,
         activeBlockId, setActiveBlockId,
       }}
     >

@@ -68,11 +68,11 @@ function ReviewContent() {
     return (
       <div className="mt-2 pl-5 space-y-1">
         <div className="flex items-center gap-2">
-          <Timer className={`w-3 h-4 shrink-0 ${activeMins > 0 ? "text-primary animate-pulse" : totalMins > 0 ? "text-primary" : "text-text-secondary"}`} />
-          <span className="text-caption text-text-secondary">
+          <Timer className={`w-3 h-4 shrink-0 ${activeMins > 0 ? "text-[#5E6AD2] animate-pulse" : totalMins > 0 ? "text-[#5E6AD2]" : "text-[#8A8F98]"}`} />
+          <span className="text-xs text-[#8A8F98]">
             {totalMins > 0 ? `${totalMins}m focus ${sessionCount > 1 ? `(${sessionCount} sesi)` : ""} · ` : ""}
             {scheduled}m scheduled
-            {activeMins > 0 && <span className="text-secondary ml-1">• live</span>}
+            {activeMins > 0 && <span className="text-[#F59E0B] ml-1">• live</span>}
           </span>
         </div>
         <ProgressBar value={progress} variant="minimal" showLabel={totalMins > 0} />
@@ -118,19 +118,19 @@ function ReviewContent() {
       <main className="flex-1 pb-16 md:pb-0">
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
           <div className="flex items-center justify-between">
-            <button onClick={prevDay} className="p-1 rounded hover:bg-border text-text-secondary">
+            <button onClick={prevDay} className="p-1 rounded-lg hover:bg-white/[0.05] text-[#8A8F98]">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold">{formatDisplayDate(dateObj)}</h1>
-            <button onClick={nextDay} className="p-1 rounded hover:bg-border text-text-secondary">
+            <h1 className="text-lg font-semibold text-[#EDEDEF]">{formatDisplayDate(dateObj)}</h1>
+            <button onClick={nextDay} className="p-1 rounded-lg hover:bg-white/[0.05] text-[#8A8F98]">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
           {isEmpty ? (
             <div className="text-center py-20">
-              <p className="text-text-secondary">No blocks for this day</p>
-              <p className="text-caption text-text-secondary mt-1">Start planning tomorrow!</p>
+              <p className="text-[#8A8F98]">No blocks for this day</p>
+              <p className="text-xs text-[#8A8F98] mt-1">Start planning tomorrow!</p>
             </div>
           ) : (
             <>
@@ -153,22 +153,32 @@ function ReviewContent() {
               </div>
 
               {isPerfect && (
-                <div className="text-center py-4 bg-success/10 rounded-radius-md">
-                  <p className="text-success font-semibold">Perfect day!</p>
-                  <p className="text-caption text-text-secondary">All blocks completed</p>
+                <div
+                  className="text-center py-4 rounded-lg"
+                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}
+                >
+                  <p className="text-[#22C55E] font-semibold">Perfect day!</p>
+                  <p className="text-xs text-[#8A8F98]">All blocks completed</p>
                 </div>
               )}
 
               {stats.completed.length > 0 && (
                 <section>
-                  <h2 className="text-sm font-semibold text-text-secondary mb-2">Completed</h2>
+                  <h2 className="text-sm font-semibold text-[#8A8F98] mb-2">Completed</h2>
                   <div className="space-y-1">
                     {stats.completed.map((b) => (
                       <div key={b.id}>
-                        <div className="flex items-center gap-2 px-3 py-2 bg-surface rounded-radius-md border border-border opacity-60">
-                          <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                          <span className="font-mono text-time text-text-secondary">{b.startTime}</span>
-                          <span className="text-sm line-through flex-1">{b.title}</span>
+                        <div
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg opacity-60"
+                          style={{
+                            background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                          }}
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-[#22C55E] shrink-0" />
+                          <span className="font-mono text-xs text-[#8A8F98]">{b.startTime}</span>
+                          <span className="text-sm line-through text-[#8A8F98] flex-1">{b.title}</span>
                         </div>
                         <BlockProgress block={b} />
                       </div>
@@ -179,17 +189,24 @@ function ReviewContent() {
 
               {stats.missed.length > 0 && (
                 <section>
-                  <h2 className="text-sm font-semibold text-text-secondary mb-2">Missed</h2>
+                  <h2 className="text-sm font-semibold text-[#8A8F98] mb-2">Missed</h2>
                   <div className="space-y-1">
                     {stats.missed.map((b) => (
                       <div key={b.id}>
-                        <div className="flex items-center gap-2 px-3 py-2 bg-surface rounded-radius-md border border-border">
-                          <Circle className="w-4 h-4 text-secondary shrink-0" />
-                          <span className="font-mono text-time text-text-secondary">{b.startTime}</span>
-                          <span className="text-sm flex-1">{b.title}</span>
+                        <div
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                          style={{
+                            background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                          }}
+                        >
+                          <Circle className="w-4 h-4 text-[#F59E0B] shrink-0" />
+                          <span className="font-mono text-xs text-[#8A8F98]">{b.startTime}</span>
+                          <span className="text-sm text-[#EDEDEF] flex-1">{b.title}</span>
                           <button
                             onClick={() => handleReschedule(b.id)}
-                            className="p-1 rounded hover:bg-background text-text-secondary hover:text-primary transition-colors"
+                            className="p-1 rounded hover:bg-white/[0.05] text-[#8A8F98] hover:text-[#5E6AD2] transition-colors"
                             aria-label="Reschedule"
                           >
                             <ArrowRight className="w-4 h-4" />
@@ -206,7 +223,7 @@ function ReviewContent() {
                 </section>
               )}
 
-              <p className="text-center text-caption text-text-secondary">
+              <p className="text-center text-xs text-[#8A8F98]">
                 {stats.completed.length >= 4 ? "Great focus today!" : stats.completed.length >= 2 ? "Good progress!" : "Keep going!"}
               </p>
             </>
