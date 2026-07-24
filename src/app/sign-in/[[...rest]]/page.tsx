@@ -4,19 +4,21 @@ import { SignIn } from "@clerk/nextjs"
 import { Clock } from "lucide-react"
 import Link from "next/link"
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+
 export default function SignInPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm flex flex-col items-center gap-6 animate-fade-up">
-        <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-[#EDEDEF]">
+        <Link href={`${BASE}/`} className="flex items-center gap-2 text-lg font-semibold text-[#EDEDEF]">
           <Clock className="w-5 h-5 text-[#5E6AD2]" />
           Time Blocking
         </Link>
         <SignIn
           routing="path"
-          path="/sign-in"
-          signUpUrl="/sign-up"
-          forceRedirectUrl="/today"
+          path={`${BASE}/sign-in`}
+          signUpUrl={`${BASE}/sign-up`}
+          forceRedirectUrl={`${BASE}/today`}
           appearance={{
             elements: {
               rootBox: "w-full",
