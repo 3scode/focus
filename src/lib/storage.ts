@@ -3,8 +3,10 @@ import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "./constants"
 
 type Method = "GET" | "POST" | "PUT" | "DELETE"
 
+const API_BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+
 async function api(url: string, method: Method = "GET", body?: unknown): Promise<any> {
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE}${url}`, {
     method,
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
