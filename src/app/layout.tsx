@@ -48,6 +48,10 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider
+      afterSignInUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/today`}
+      afterSignUpUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/today`}
+      signInUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/sign-in`}
+      signUpUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/sign-up`}
       appearance={{
         variables: {
           colorPrimary: "#5E6AD2",
