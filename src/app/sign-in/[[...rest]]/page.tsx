@@ -4,8 +4,6 @@ import { SignInButton } from "@clerk/nextjs"
 import { Clock } from "lucide-react"
 import Link from "next/link"
 
-const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ""
-
 export default function SignInPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
@@ -17,7 +15,7 @@ export default function SignInPage() {
         <p className="text-sm text-[#8A8F98] text-center">
           Masuk ke akun Time Blocking kamu
         </p>
-        <SignInButton mode="modal" fallbackRedirectUrl={`${BASE}/today`}>
+        <SignInButton mode="modal" fallbackRedirectUrl="/today">
           <button className="w-full py-2.5 bg-[#5E6AD2] text-white rounded-lg text-sm font-medium hover:bg-[#6872D9] transition-all shadow-[0_0_0_1px_rgba(94,106,210,0.5),0_4px_12px_rgba(94,106,210,0.3),inset_0_1px_0_0_rgba(255,255,255,0.2)]">
             Masuk
           </button>

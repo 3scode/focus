@@ -11,18 +11,17 @@ const inter = Inter({
   subsets: ["latin"],
 })
 
-const BASE = "/time-blocking"
 export const metadata: Metadata = {
   title: "Time Blocking",
   description: "Simple, visual time blocking for daily planning",
-  manifest: `${BASE}/manifest.json`,
+  manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: `${BASE}/favicon.svg`, type: "image/svg+xml" },
-      { url: `${BASE}/icon-192x192.png`, sizes: "192x192", type: "image/png" },
-      { url: `${BASE}/icon-512x512.png`, sizes: "512x512", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: `${BASE}/apple-touch-icon.png`,
+    apple: "/apple-touch-icon.png",
   },
   appleWebApp: {
     capable: true,
@@ -49,10 +48,10 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider
-      signInForceRedirectUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/today`}
-      signUpForceRedirectUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/today`}
-      signInUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/sign-in`}
-      signUpUrl={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/sign-up`}
+      signInForceRedirectUrl="/today"
+      signUpForceRedirectUrl="/today"
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
       appearance={{
         variables: {
           colorPrimary: "#5E6AD2",
