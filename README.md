@@ -1,11 +1,11 @@
 # Focus
 
-Aplikasi PWA berbasis web untuk perencanaan harian yang visual, modern, dan offline penuh.
+Aplikasi PWA berbasis web untuk perencanaan harian yang visual, modern, dengan autentikasi dan database cloud.
 
 ## Fitur
 
 - **Landing Page** — Halaman depan dengan hero gradient, bento grid, dan call-to-action.
-- **Autentikasi** — Sign-up dan sign-in dengan Clerk (Google OAuth + email/password).
+- **Autentikasi** — Sign-up dan sign-in dengan email/password via Better Auth.
 - **Hari Ini** — Timeline vertikal dengan drag-and-drop block. Tinggi block otomatis sesuai durasi.
 - **Mingguan** — Grid 7 hari dengan daftar lengkap block minggu ini.
 - **Recurring Block** — Block berulang harian/mingguan dengan opsi hapus seluruh seri.
@@ -18,7 +18,7 @@ Aplikasi PWA berbasis web untuk perencanaan harian yang visual, modern, dan offl
 - **Kategori & Warna** — Kategori dengan kode warna yang memberi style setiap block.
 - **Dark Mode Permanen** — Selalu dark mode dengan desain system Linear (near-black, glass morphism, accent #5E6AD2).
 - **Export/Import** — Export dan import data (blocks, kategori, settings, focus sessions) sebagai JSON.
-- **Offline Penuh** — Semua data di IndexedDB + localStorage, service worker untuk installabilitas PWA.
+- **Offline Support** — Service worker untuk caching halaman static. Data utama via API dengan IndexedDB sebagai local cache.
 
 ## Tech Stack
 
@@ -29,17 +29,39 @@ Aplikasi PWA berbasis web untuk perencanaan harian yang visual, modern, dan offl
 | Styling | Tailwind CSS 4 |
 | Ikon | Lucide React |
 | Drag & Drop | dnd-kit |
-| Auth | Clerk |
-| Storage | IndexedDB (idb-keyval) + localStorage |
+| Auth | Better Auth (email/password) |
+| Database | PostgreSQL via Neon (Drizzle ORM) |
+| Cloud Storage | IndexedDB (idb-keyval) |
 | PWA | Web App Manifest + Service Worker |
+
+## Environment Variables
+
+Buat file `.env.local` dengan isi berikut:
+
+```bash
+# === BETTER AUTH ===
+# Secret untuk signing token session
+# Generate: openssl rand -base64 32
+BETTER_AUTH_SECRET=your_secret_here
+
+# URL aplikasi (development atau production)
+BETTER_AUTH_URL=http://localhost:3000
+
+# === DATABASE ===
+DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
+
+# === BETTER AUTH CLOUD (opsional) ===
+BETTER_AUTH_API_KEY=your_api_key_here
+```
 
 ## Memulai
 
 ```bash
 bun install
+bun run dev
 ```
 
-> ⚠️ Jangan jalankan `bun run dev` atau `bun run build` tanpa persetujuan dari author. Tanyakan dulu sebelum menjalankan perintah tersebut.
+> ⚠️ Jangan jalankan `bun run build` tanpa persetujuan dari author. Tanyakan dulu sebelum menjalankan perintah build.
 > Commit dan push messages **wajib menggunakan Bahasa Indonesia**.
 
 ## Author
