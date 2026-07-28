@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth"
 
 const publicRoutes = ["/sign-in", "/sign-up", "/", "/api"]
 
-export default async function proxy(req: NextRequest) {
+export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
   const isPublic = publicRoutes.some((r) => path === r || path.startsWith(r + "/"))
 
