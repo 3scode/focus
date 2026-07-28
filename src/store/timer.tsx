@@ -98,6 +98,8 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { activeBlockId, setActiveBlockId, settings } = useApp()
   const defaultTimer = settings.defaultTimer ?? 25
+  const sessionTimerRef = useRef(defaultTimer)
+  const [sessionTimer, setSessionTimer] = useState(defaultTimer)
 
   const baseElapsedRef = useRef(saved?.baseElapsed ?? 0)
   const startTimeRef = useRef<number | null>(saved?.startTimestamp ?? null)
@@ -137,9 +139,16 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     })
   }, [phase, focusMinutes, completedSessions, isPaused, activeBlockId])
 
+  const lastPersistRef = useRef(0)
+
   useEffect(() => {
-    persistCurrent()
-  }, [persistCurrent, elapsed, breakTimeLeft])
+    if (phase === "idle") return
+    const now = Date.now()
+    if (now - lastPersistRef.current >= 5000) {
+      lastPersistRef.current = now
+      persistCurrent()
+    }
+  })
 
   const tick = useCallback(() => {
     if (phase === "focus" && startTimeRef.current !== null) {
@@ -174,11 +183,10 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   }, [phase, isRunning, isPaused, tick, clear])
 
   useEffect(() => {
-    if (phase !== "focus" || !isRunning || isPaused || defaultTimer <= 0) return
-    const threshold = defaultTimer * 60
+    if (phase !== "focus" || !isRunning || isPaused || sessionTimerRef.current <= 0) return
+    const threshold = sessionTimerRef.current * 60
     const completed = Math.floor(elapsed / threshold)
     if (completed > completedSessions) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCompletedSessions(completed)
       try {
         const ctx = new AudioContext()
@@ -194,10 +202,13 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         osc.stop(ctx.currentTime + 0.6)
       } catch {}
     }
-  }, [elapsed, isRunning, isPaused, phase, defaultTimer, completedSessions])
+  }, [elapsed, isRunning, isPaused, phase, completedSessions])
 
   const startFocus = useCallback((blockId: string) => {
     setActiveBlockId(blockId)
+    const timer = defaultTimer
+    sessionTimerRef.current = timer
+    setSessionTimer(timer)
     baseElapsedRef.current = 0
     startTimeRef.current = null
     setElapsed(0)
@@ -206,7 +217,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     setIsRunning(true)
     setIsPaused(false)
     setCompletedSessions(0)
-  }, [setActiveBlockId])
+  }, [setActiveBlockId, defaultTimer])
 
   const pauseFocus = useCallback(() => {
     if (startTimeRef.current !== null) {
@@ -230,8 +241,10 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     }
     baseElapsedRef.current = 0
     setElapsed(0)
+    setPhase("idle")
     setIsRunning(false)
     setIsPaused(false)
+    setCompletedSessions(0)
     clearPersist()
     return total
   }, [clear])
@@ -322,7 +335,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         minutes, seconds,
         breakMinutes: bMinutes, breakSeconds: bSeconds,
         breakProgress: bp,
-        stopwatchProgress: defaultTimer > 0 ? ((elapsed % (defaultTimer * 60)) / (defaultTimer * 60)) * 100 : 0,
+        stopwatchProgress: sessionTimer > 0 ? ((elapsed % (sessionTimer * 60)) / (sessionTimer * 60)) * 100 : 0,
         startFocus, pauseFocus, resumeFocus, stopFocus,
         skipFocus, setFocusMinutes: setFocusMinutesState,
         startBreak, pauseBreak, resumeBreak, skipBreak,

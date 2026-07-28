@@ -1,7 +1,7 @@
 "use client"
 
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react"
-import { useUser, useAuth as useClerkAuth, useClerk } from "@clerk/nextjs"
+import { createContext, useContext, useCallback, type ReactNode } from "react"
+import { authClient } from "@/lib/auth-client"
 
 interface User {
   email: string
@@ -17,32 +17,20 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user: clerkUser, isLoaded: userLoaded } = useUser()
-  const { isLoaded: authLoaded } = useClerkAuth()
-  const { signOut: clerkSignOut } = useClerk()
-
-  const [user, setUser] = useState<User | null>(null)
-
-  const loading = !userLoaded || !authLoaded
-
-  useEffect(() => {
-    if (clerkUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUser({
-        email: clerkUser.primaryEmailAddress?.emailAddress ?? "",
-        name: clerkUser.fullName ?? clerkUser.username ?? clerkUser.primaryEmailAddress?.emailAddress ?? "",
-      })
-    } else {
-      setUser(null)
-    }
-  }, [clerkUser])
+  const { data: session, isPending } = authClient.useSession()
+  const user: User | null = session?.user
+    ? {
+        email: session.user.email ?? "",
+        name: session.user.name ?? session.user.email ?? "",
+      }
+    : null
 
   const signOut = useCallback(() => {
-    clerkSignOut({ redirectUrl: "/" })
-  }, [clerkSignOut])
+    authClient.signOut()
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading: isPending, signOut }}>
       {children}
     </AuthContext.Provider>
   )

@@ -40,7 +40,9 @@ CREATE TABLE "habit_records" (
 	"user_id" text NOT NULL,
 	"habit_id" text NOT NULL,
 	"date" text NOT NULL,
-	"completed_at" text NOT NULL
+	"completed_at" text NOT NULL,
+	"status" text DEFAULT 'completed' NOT NULL,
+	"failure_reason" text
 );
 --> statement-breakpoint
 CREATE TABLE "habits" (

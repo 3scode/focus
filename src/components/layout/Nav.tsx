@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { CalendarDays, LayoutGrid, Timer, BarChart3, Settings, LogOut, User, Clock, CheckSquare } from "lucide-react"
-import { useUser, useClerk } from "@clerk/nextjs"
+import { authClient } from "@/lib/auth-client"
 
 
 const links = [
@@ -17,14 +17,14 @@ const links = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { user } = useUser()
-  const { signOut } = useClerk()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
 
   return (
-    <aside className="hidden md:flex flex-col w-56 h-screen bg-[#0a0a0c] border-r border-white/[0.06] p-4 shrink-0">
+    <aside className="hidden md:flex flex-col w-56 min-h-screen bg-[#0a0a0c] border-r border-white/[0.06] p-4 shrink-0">
       <Link href="/" className="flex items-center gap-2 text-lg font-semibold mb-8 px-3 text-[#EDEDEF]">
         <Clock className="w-5 h-5 text-[#5E6AD2]" />
-        Time Blocking
+        Focus
       </Link>
       <nav className="flex flex-col gap-1">
         {links.map(({ href, label, icon: Icon }) => {
@@ -48,19 +48,19 @@ export function Sidebar() {
       <div className="mt-auto border-t border-white/[0.06] pt-4 px-3">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-8 h-8 rounded-full bg-[#5E6AD2]/20 flex items-center justify-center">
-            {user?.imageUrl ? (
-              <img src={user.imageUrl} alt="" className="w-8 h-8 rounded-full" />
+            {user?.image ? (
+              <img src={user.image} alt="" className="w-8 h-8 rounded-full" />
             ) : (
               <User className="w-4 h-4 text-[#5E6AD2]" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[#EDEDEF] truncate">{user?.fullName ?? user?.username ?? "User"}</p>
-            <p className="text-xs text-[#8A8F98] truncate">{user?.primaryEmailAddress?.emailAddress}</p>
+            <p className="text-sm font-medium text-[#EDEDEF] truncate">{user?.name ?? user?.email ?? "User"}</p>
+            <p className="text-xs text-[#8A8F98] truncate">{user?.email ?? ""}</p>
           </div>
         </div>
         <button
-          onClick={() => signOut({ redirectUrl: "/" })}
+          onClick={() => authClient.signOut()}
           className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#8A8F98] hover:text-[#EF4444] rounded-lg hover:bg-white/[0.05] transition-all duration-200"
         >
           <LogOut className="w-4 h-4" />

@@ -3,20 +3,20 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useAuth } from "@clerk/nextjs"
+import { authClient } from "@/lib/auth-client"
 import { CalendarDays, LayoutGrid, Timer, BarChart3, ArrowRight, Clock } from "lucide-react"
 
 export default function HomePage() {
   const router = useRouter()
-  const { isLoaded, isSignedIn } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (!isPending && session) {
       router.replace("/today")
     }
-  }, [isLoaded, isSignedIn, router])
+  }, [isPending, session, router])
 
-  if (!isLoaded) {
+  if (isPending) {
     return (
       <div className="flex items-center justify-center min-h-screen text-[#8A8F98]">
         Loading...
@@ -24,10 +24,10 @@ export default function HomePage() {
     )
   }
 
-  if (isSignedIn) return null
+  if (session) return null
 
   const features = [
-    { icon: CalendarDays, title: "Time Blocking", desc: "Atur jadwal harian dengan blok waktu yang visual dan mudah" },
+    { icon: CalendarDays, title: "Blok Waktu", desc: "Atur jadwal harian dengan blok waktu yang visual dan mudah" },
     { icon: Timer, title: "Fokus Timer", desc: "Stopwatch berbasis Pomodoro dengan istirahat proporsional" },
     { icon: LayoutGrid, title: "Target Harian", desc: "Pantau progress dan selesaikan target setiap hari" },
     { icon: BarChart3, title: "Review Harian", desc: "Evaluasi pencapaian dan reschedule tugas yang terlewat" },
@@ -42,7 +42,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto flex items-center justify-between px-4 h-14">
           <h1 className="text-lg font-semibold flex items-center gap-2 text-[#EDEDEF]">
             <Clock className="w-5 h-5 text-[#5E6AD2]" />
-            Time Blocking
+            Focus
           </h1>
           <div className="flex items-center gap-2">
             <Link
@@ -73,7 +73,7 @@ export default function HomePage() {
             </span>
             <br />
             <span className="bg-gradient-to-r from-[#5E6AD2] via-indigo-400 to-[#5E6AD2] bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer">
-              Time Blocking
+              Focus
             </span>
           </h2>
           <p className="text-lg text-[#8A8F98] max-w-md mx-auto mb-8">

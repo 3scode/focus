@@ -2,25 +2,35 @@
 
 import { useMemo, useCallback, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
-import { Plus, Trash2, Flame } from "lucide-react"
+import { Plus, Trash2, Flame, X, Check } from "lucide-react"
 import { AuthGuard } from "@/components/layout/AuthGuard"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
+import { Button } from "@/components/ui/Button"
+import { Modal } from "@/components/ui/Modal"
 import { useApp } from "@/store"
 import { formatDate, formatDisplayDate } from "@/lib/time"
-import { subDays, isSameDay, startOfDay } from "date-fns"
+import { subDays } from "date-fns/subDays"
+import { isSameDay } from "date-fns/isSameDay"
+import { startOfDay } from "date-fns/startOfDay"
+import { parseISO } from "date-fns/parseISO"
+import { format } from "date-fns/format"
 
-function getStreak(habitId: string, records: { habitId: string; date: string }[]): number {
+const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"]
+
+function getStreak(habitId: string, records: { habitId: string; date: string; status?: string }[]): number {
   const today = startOfDay(new Date())
   let streak = 0
-  for (let i = 0; i < 365; i++) {
+  const todayStr = formatDate(today)
+  const ok = (r: { habitId: string; date: string; status?: string }) => (r.status ?? "completed") !== "failed"
+  const hasToday = records.some((r) => r.habitId === habitId && r.date === todayStr && ok(r))
+
+  for (let i = hasToday ? 0 : 1; i < 365; i++) {
     const day = subDays(today, i)
     const dayStr = formatDate(day)
-    if (records.some((r) => r.habitId === habitId && r.date === dayStr)) {
+    if (records.some((r) => r.habitId === habitId && r.date === dayStr && ok(r))) {
       streak++
-    } else if (i > 0) {
-      break
     } else {
-      return 0
+      break
     }
   }
   return streak
@@ -36,22 +46,23 @@ const RANGE_OPTIONS: { label: string; value: Range }[] = [
   { label: "1M", value: 30 },
 ]
 
-function CompletionBarChart({ habitRecords, habits: habitsList, days }: {
-  habitRecords: { habitId: string; date: string }[]
+function CompletionBarChart({ habitRecords: records, habits: habitsList, days }: {
+  habitRecords: { habitId: string; date: string; status?: string }[]
   habits: { id: string }[]
   days: Date[]
 }) {
+  const habitRecords = records.map((r) => ({ ...r, status: r.status ?? "completed" }))
   const barMax = habitsList.length || 1
   const count = days.length
   const barWidth = Math.max(12, Math.min(36, 520 / count - 4))
   const chartHeight = 140
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const dayNamesLocal = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   return (
     <div className="flex items-end justify-between px-2" style={{ minHeight: chartHeight + 40 }}>
       {days.map((day) => {
         const dayStr = formatDate(day)
-        const count = habitRecords.filter((r) => r.date === dayStr).length
+        const count = habitRecords.filter((r) => r.date === dayStr && r.status !== "failed").length
         const pct = count / barMax
         const barHeight = Math.max(pct * (chartHeight - 10), count > 0 ? 4 : 2)
         const isTodayDay = isSameDay(day, new Date())
@@ -83,7 +94,7 @@ function CompletionBarChart({ habitRecords, habits: habitsList, days }: {
               )}
             </svg>
             <span className={`text-[10px] font-medium ${isTodayDay ? "text-[#5E6AD2]" : "text-[#5A5E66]"}`}>
-              {dayNames[day.getDay()].slice(0, 2)}
+              {dayNamesLocal[day.getDay()].slice(0, 2)}
             </span>
           </div>
         )
@@ -93,7 +104,12 @@ function CompletionBarChart({ habitRecords, habits: habitsList, days }: {
 }
 
 function HabitsContent() {
-  const { habits, habitRecords, addHabit, addHabitRecord, deleteHabitRecord, deleteHabit } = useApp()
+  const { habits, habitRecords, addHabit, addHabitRecord, deleteHabitRecord, deleteHabit, updateHabit } = useApp()
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
+  const [failReasonText, setFailReasonText] = useState("")
+  const [showFailModal, setShowFailModal] = useState(false)
+  const [failModalHabitId, setFailModalHabitId] = useState<string | null>(null)
   const today = formatDate(new Date())
   const todayRecords = useMemo(() => habitRecords.filter((r) => r.date === today), [habitRecords, today])
   const [range, setRange] = useState<Range>(7)
@@ -107,20 +123,38 @@ function HabitsContent() {
   }, [range])
 
   const handleToggle = useCallback(async (habitId: string) => {
-    const existing = todayRecords.find((r) => r.habitId === habitId)
+    const existing = todayRecords.find((r) => r.habitId === habitId && (r.status ?? "completed") !== "failed")
     if (existing) {
       await deleteHabitRecord(existing.id)
     } else {
+      const failed = todayRecords.find((r) => r.habitId === habitId && r.status === "failed")
+      if (failed) await deleteHabitRecord(failed.id)
       await addHabitRecord({
         id: uuidv4(),
         habitId,
         date: today,
         completedAt: new Date().toISOString(),
+        status: "completed",
       })
     }
   }, [todayRecords, today, addHabitRecord, deleteHabitRecord])
 
-  const todayDone = todayRecords.length
+  const handleFail = useCallback(async (habitId: string, reason: string) => {
+    const existing = todayRecords.find((r) => r.habitId === habitId)
+    if (existing) await deleteHabitRecord(existing.id)
+    await addHabitRecord({
+      id: uuidv4(),
+      habitId,
+      date: today,
+      completedAt: new Date().toISOString(),
+      status: "failed",
+      failureReason: reason || undefined,
+    })
+    setFailModalHabitId(null)
+    setFailReasonText("")
+  }, [todayRecords, today, addHabitRecord, deleteHabitRecord])
+
+  const todayDone = todayRecords.filter((r) => (r.status ?? "completed") !== "failed").length
   const todayTotal = habits.length
   const todayPct = todayTotal > 0 ? Math.round((todayDone / todayTotal) * 100) : 0
 
@@ -136,11 +170,17 @@ function HabitsContent() {
   const periodAvg = useMemo(() => {
     let total = 0
     for (const day of days) {
-      total += habitRecords.filter((r) => r.date === formatDate(day)).length
+      total += habitRecords.filter((r) => r.date === formatDate(day) && (r.status ?? "completed") !== "failed").length
     }
-    const possible = habits.length * range
+    const possible = habits.reduce((sum, h) => {
+      return sum + (h.frequency === "weekly" ? Math.ceil(range / 7) : range)
+    }, 0)
     return possible > 0 ? Math.round((total / possible) * 100) : 0
   }, [habitRecords, days, habits, range])
+
+  const failureHistoryRecords = habitRecords
+    .filter((r) => r.status === "failed" && days.some((d) => formatDate(d) === r.date))
+    .sort((a, b) => b.date.localeCompare(a.date))
 
   return (
     <div className="flex min-h-screen">
@@ -155,11 +195,11 @@ function HabitsContent() {
           {habits.length > 0 && (
             <>
               <section className="grid grid-cols-3 gap-3">
-                {[
-                  { label: "Today", value: `${todayPct}%`, sub: `${todayDone}/${todayTotal} done` },
-                  { label: "Best Streak", value: `${bestStreak}`, sub: "consecutive days", icon: true },
-                  { label: `${range}D Avg`, value: `${periodAvg}%`, sub: "completion rate" },
-                ].map((stat) => (
+                  {[
+                    { label: "Hari Ini", value: `${todayPct}%`, sub: `${todayDone}/${todayTotal} selesai` },
+                    { label: "Streak Terbaik", value: `${bestStreak}`, sub: "hari berturut-turut", icon: true },
+                    { label: `${range}H Rata-rata`, value: `${periodAvg}%`, sub: "tingkat penyelesaian" },
+                  ].map((stat) => (
                   <div
                     key={stat.label}
                     className="px-4 py-3 rounded-xl"
@@ -178,7 +218,7 @@ function HabitsContent() {
 
               <section>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-semibold text-[#8A8F98]">Completion</h2>
+                  <h2 className="text-sm font-semibold text-[#8A8F98]">Penyelesaian</h2>
                   <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5">
                     {RANGE_OPTIONS.map((opt) => (
                       <button
@@ -219,7 +259,7 @@ function HabitsContent() {
 
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-[#8A8F98]">Today</h2>
+              <h2 className="text-sm font-semibold text-[#8A8F98]">Hari Ini</h2>
               <button
                 onClick={() => {
                   addHabit({
@@ -235,82 +275,208 @@ function HabitsContent() {
                 style={{ background: "rgba(255,255,255,0.06)" }}
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add Habit
+                Tambah Habit
               </button>
             </div>
             <div className="space-y-2">
               {habits.map((habit) => {
-                const done = todayRecords.some((r) => r.habitId === habit.id)
+                const record = todayRecords.find((r) => r.habitId === habit.id)
+                const done = record?.status === "completed"
+                const failed = record?.status === "failed"
                 return (
-                  <div
-                    key={habit.id}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all"
-                    style={{
-                      background: done
-                        ? "linear-gradient(to bottom, rgba(94,106,210,0.12), rgba(94,106,210,0.04))"
-                        : "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
-                      border: done
-                        ? "1px solid rgba(94,106,210,0.25)"
-                        : "1px solid rgba(255,255,255,0.06)",
-                      boxShadow: done ? "0 0 20px rgba(94,106,210,0.08)" : "0 0 0 1px rgba(255,255,255,0.06)",
-                    }}
-                    onClick={() => handleToggle(habit.id)}
-                  >
+                  <div key={habit.id}>
                     <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                        done
-                          ? "bg-[#5E6AD2] border-[#5E6AD2] shadow-[0_0_12px_rgba(94,106,210,0.4)]"
-                          : "border-white/[0.2] hover:border-[#5E6AD2]"
-                      }`}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all"
+                      style={{
+                        background: done
+                          ? "linear-gradient(to bottom, rgba(94,106,210,0.12), rgba(94,106,210,0.04))"
+                          : failed
+                          ? "linear-gradient(to bottom, rgba(244,63,94,0.12), rgba(244,63,94,0.04))"
+                          : "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                        border: done
+                          ? "1px solid rgba(94,106,210,0.25)"
+                          : failed
+                          ? "1px solid rgba(244,63,94,0.25)"
+                          : "1px solid rgba(255,255,255,0.06)",
+                        boxShadow: done
+                          ? "0 0 20px rgba(94,106,210,0.08)"
+                          : failed
+                          ? "0 0 20px rgba(244,63,94,0.08)"
+                          : "0 0 0 1px rgba(255,255,255,0.06)",
+                      }}
                     >
-                      {done && (
-                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className={`text-sm block ${done ? "text-white/50 line-through" : "text-[#EDEDEF]"}`}>
-                        {habit.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 text-[#8A8F98]">
-                        <Flame className="w-3.5 h-3.5" style={{ color: habit.color }} />
-                        <span className="text-xs font-medium">{getStreak(habit.id, habitRecords)}</span>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          deleteHabit(habit.id)
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-white/[0.05] text-[#8A8F98] hover:text-[#EF4444] transition-colors"
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                          done
+                            ? "bg-[#5E6AD2] border-[#5E6AD2] shadow-[0_0_12px_rgba(94,106,210,0.4)]"
+                            : failed
+                            ? "bg-[#F43F5E] border-[#F43F5E] shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+                            : "border-white/40 hover:border-[#5E6AD2] hover:bg-white/[0.06]"
+                        }`}
+                        onClick={(e) => { e.stopPropagation(); handleToggle(habit.id) }}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                        {done && (
+                          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        {failed && (
+                          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); setEditingId(habit.id); setEditValue(habit.name) }}>
+                        {editingId === habit.id ? (
+                          <input
+                            autoFocus
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => {
+                              if (editValue.trim() && editValue !== habit.name) {
+                                updateHabit(habit.id, { name: editValue.trim() })
+                              }
+                              setEditingId(null)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") (e.target as HTMLInputElement).blur()
+                              if (e.key === "Escape") setEditingId(null)
+                            }}
+                            className="text-sm bg-transparent text-[#EDEDEF] border-b border-[#5E6AD2] outline-none w-full"
+                          />
+                        ) : (
+                          <div className="space-y-1">
+                            <span className={`text-sm block ${done ? "text-white/50 line-through" : failed ? "text-[#F43F5E] line-through" : "text-[#EDEDEF]"}`}>
+                              {habit.name}
+                            </span>
+                            {failed && record?.failureReason && (
+                              <div className="px-3 py-2 rounded-lg bg-[#F43F5E]/8 border border-[#F43F5E]/15">
+                                <p className="text-xs text-[#F43F5E]/80 leading-relaxed">{record.failureReason}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (!done) handleToggle(habit.id)
+                          }}
+                          className={`p-2.5 rounded-xl transition-all ${
+                            done 
+                              ? "text-white bg-[#5E6AD2] shadow-[0_0_12px_rgba(94,106,210,0.4)]" 
+                              : "text-[#8A8F98] hover:bg-white/[0.08] hover:text-[#5E6AD2] border border-white/20"
+                          }`}
+                          title={done ? "Tandai belum selesai" : "Tandai selesai"}
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            const isFailed = todayRecords.some((r) => r.habitId === habit.id && r.status === "failed")
+                            if (isFailed) {
+                              handleToggle(habit.id)
+                            } else {
+                              setFailModalHabitId(habit.id); 
+                              setFailReasonText(""); 
+                              setShowFailModal(true) 
+                            }
+                          }}
+                          className={`p-2.5 rounded-xl transition-all ${
+                            failed 
+                              ? "text-white bg-[#F43F5E] shadow-[0_0_12px_rgba(244,63,94,0.4)]" 
+                              : "text-[#8A8F98] hover:bg-white/[0.08] hover:text-[#F43F5E] border border-white/20"
+                          }`}
+                          title="Tandai gagal (opsional)"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08]">
+                          <Flame className="w-4 h-4" style={{ color: habit.color }} />
+                          <span className="text-xs font-medium text-[#8A8F98]">{getStreak(habit.id, habitRecords)}</span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            deleteHabit(habit.id)
+                          }}
+                          className="p-2.5 rounded-xl hover:bg-white/[0.08] text-[#8A8F98] hover:text-[#EF4444] transition-colors border border-transparent hover:border-white/10"
+                          title="Delete habit"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
+                    
+                    <Modal 
+                      open={showFailModal && failModalHabitId !== null} 
+                      title="Tandai Habit sebagai Gagal"
+                      onClose={() => setShowFailModal(false)}
+                    >
+                      <div className="space-y-4">
+                        <p className="text-sm text-[#8A8F98]">Apa yang menghalangi kamu menyelesaikan habit ini hari ini? <span className="text-[#5A5E66]">(opsional)</span></p>
+                        <textarea
+                          autoFocus
+                          value={failReasonText}
+                          onChange={(e) => setFailReasonText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault()
+                              if (failModalHabitId) handleFail(failModalHabitId, failReasonText)
+                              setShowFailModal(false)
+                            }
+                            if (e.key === "Escape") {
+                              setShowFailModal(false)
+                              setFailReasonText("")
+                            }
+                          }}
+                          placeholder="Tulis alasan gagal..."
+                          className="w-full px-4 py-3 rounded-xl border border-white/[0.06] bg-white/[0.05] text-[#EDEDEF] placeholder:text-[#5A5E66] focus:outline-none focus:ring-2 focus:ring-[#5E6AD2]/30 focus:border-[#5E6AD2]/30 text-base transition-all resize-none"
+                          rows={3}
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="secondary" onClick={() => { setShowFailModal(false); setFailReasonText("") }}>
+                            Batal
+                          </Button>
+                          <Button 
+                            variant="secondary"
+                            onClick={() => { if (failModalHabitId) handleFail(failModalHabitId, ""); setShowFailModal(false) }}
+                          >
+                            Lewati
+                          </Button>
+                          <Button 
+                            onClick={() => { if (failModalHabitId) handleFail(failModalHabitId, failReasonText); setShowFailModal(false) }}
+                            style={{ background: "#EF4444" }}
+                          >
+                            Tandai Gagal
+                          </Button>
+                        </div>
+                      </div>
+                    </Modal>
                   </div>
                 )
               })}
               {habits.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-sm text-[#8A8F98]">No habits yet.</p>
-                  <p className="text-xs text-[#5A5E66] mt-1">Click &quot;Add Habit&quot; to start tracking.</p>
+                  <p className="text-sm text-[#8A8F98]">Belum ada habit.</p>
+                  <p className="text-xs text-[#5A5E66] mt-1">Klik &quot;Tambah Habit&quot; untuk mulai melacak.</p>
                 </div>
               )}
             </div>
           </section>
 
           {habits.length > 0 && (
+            <>
             <section>
-              <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">Past {range} Days</h2>
+                  <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">7 Hari Terakhir</h2>
               <div className="overflow-x-auto">
                 <div className="min-w-[400px] space-y-1">
                   <div className="flex items-center gap-2 px-4 py-2">
-                    <div className="w-28 shrink-0" />
-                    {days.map((day) => {
-                      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-                      const isTodayDay = isSameDay(day, new Date())
+                    <div className="w-36 shrink-0" />
+                     {days.map((day) => {
+                       const isTodayDay = isSameDay(day, new Date())
                       return (
                         <div
                           key={day.toISOString()}
@@ -318,7 +484,7 @@ function HabitsContent() {
                             isTodayDay ? "text-[#5E6AD2]" : "text-[#5A5E66]"
                           }`}
                         >
-                          <div>{dayNames[day.getDay()]}</div>
+                          <div>{DAY_NAMES[day.getDay()]}</div>
                           <div className="mt-0.5">{day.getDate()}</div>
                         </div>
                       )
@@ -333,26 +499,35 @@ function HabitsContent() {
                         border: "1px solid rgba(255,255,255,0.06)",
                       }}
                     >
-                      <div className="w-28 shrink-0 flex items-center gap-2">
-                        <span className="text-xs text-[#8A8F98] truncate">{habit.name}</span>
+                      <div className="w-36 shrink-0 flex items-center gap-2">
+                        <span className="text-xs text-[#8A8F98]">{habit.name}</span>
                       </div>
                       {days.map((day) => {
                         const dayStr = formatDate(day)
-                        const done = habitRecords.some(
+                        const record = habitRecords.find(
                           (r) => r.habitId === habit.id && r.date === dayStr
                         )
+                        const done = record?.status === "completed"
+                        const failed = record?.status === "failed"
                         return (
                           <div key={dayStr} className="flex-1 flex justify-center">
                             <div
                               className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                                 done
                                   ? "bg-[#5E6AD2] shadow-[0_0_8px_rgba(94,106,210,0.3)]"
+                                  : failed
+                                  ? "bg-[#F43F5E] shadow-[0_0_8px_rgba(244,63,94,0.3)]"
                                   : "bg-white/[0.04] border border-white/[0.06]"
                               }`}
                             >
                               {done && (
                                 <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                              {failed && (
+                                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12" />
                                 </svg>
                               )}
                             </div>
@@ -364,6 +539,45 @@ function HabitsContent() {
                 </div>
               </div>
             </section>
+            
+            {failureHistoryRecords.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">Riwayat Kegagalan</h2>
+                <div className="space-y-2">
+                  {failureHistoryRecords.map((record) => {
+                    const habit = habits.find((h) => h.id === record.habitId)
+                    if (!habit) return null
+                    const dateObj = parseISO(record.date)
+                    const dateLabel = format(dateObj, "dd MMM yyyy")
+                    const dayLabel = DAY_NAMES[dateObj.getDay()]
+                    
+                    return (
+                      <div
+                        key={record.id}
+                        className="px-4 py-3 rounded-xl"
+                        style={{
+                          background: "linear-gradient(to bottom, rgba(244,63,94,0.08), rgba(244,63,94,0.02))",
+                          border: "1px solid rgba(244,63,94,0.15)",
+                          boxShadow: "0 0 0 1px rgba(244,63,94,0.08)",
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[#F43F5E]" />
+                            <span className="text-sm font-medium text-[#EDEDEF]">{habit.name}</span>
+                          </div>
+                          <span className="text-xs text-[#8A8F98]">{dayLabel}, {dateLabel}</span>
+                        </div>
+                        {record.failureReason && (
+                          <p className="text-xs text-[#F43F5E]/80 leading-relaxed pl-4">{record.failureReason}</p>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+            </>
           )}
         </div>
       </main>

@@ -47,6 +47,8 @@ export interface HabitRecord {
   habitId: string
   date: string
   completedAt: string
+  status?: "completed" | "failed"
+  failureReason?: string
 }
 
 export interface Settings {

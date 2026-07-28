@@ -13,10 +13,10 @@ interface BlockFormProps {
   preselectedTime?: string
   selectedDate: string
   categories: Category[]
-  onSubmit: (block: Block) => void
+  onSubmit: (block: Block) => Promise<void> | void
   onClose: () => void
-  onDelete?: (id: string) => void
-  onDeleteSeries?: (groupId: string) => void
+  onDelete?: (id: string) => Promise<void> | void
+  onDeleteSeries?: (groupId: string) => Promise<void> | void
   onConvertToHabit?: (name: string, color: string) => Promise<void>
 }
 
@@ -51,10 +51,11 @@ export function BlockForm({
   const [recurringEndDate, setRecurringEndDate] = useState(initialBlock?.recurringEndDate ?? "")
   const [error, setError] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const duration = calcDuration(startTime, endTime)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
@@ -71,35 +72,40 @@ export function BlockForm({
       return
     }
 
-    const now = new Date().toISOString()
-    const block: Block = {
-      id: initialBlock?.id ?? uuidv4(),
-      title: title.trim(),
-      date: selectedDate,
-      startTime,
-      endTime,
-      categoryId,
-      color: blockColor || undefined,
-      completed: initialBlock?.completed ?? false,
-      focusSessions: initialBlock?.focusSessions ?? [],
-      createdAt: initialBlock?.createdAt ?? now,
-      updatedAt: now,
-      recurring: isRecurring,
-      recurringPattern: isRecurring ? recurringPattern : undefined,
-      recurringStartDate: isRecurring ? recurringStartDate : undefined,
-      recurringEndDate: isRecurring ? recurringEndDate : undefined,
-      recurringGroupId: initialBlock?.recurringGroupId ?? (isRecurring ? uuidv4() : undefined),
+    setSaving(true)
+    try {
+      const now = new Date().toISOString()
+      const block: Block = {
+        id: initialBlock?.id ?? uuidv4(),
+        title: title.trim(),
+        date: selectedDate,
+        startTime,
+        endTime,
+        categoryId,
+        color: blockColor || undefined,
+        completed: initialBlock?.completed ?? false,
+        focusSessions: initialBlock?.focusSessions ?? [],
+        createdAt: initialBlock?.createdAt ?? now,
+        updatedAt: now,
+        recurring: isRecurring,
+        recurringPattern: isRecurring ? recurringPattern : undefined,
+        recurringStartDate: isRecurring ? recurringStartDate : undefined,
+        recurringEndDate: isRecurring ? recurringEndDate : undefined,
+        recurringGroupId: initialBlock?.recurringGroupId ?? (isRecurring ? uuidv4() : undefined),
+      }
+      await onSubmit(block)
+    } finally {
+      setSaving(false)
     }
-    onSubmit(block)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!initialBlock || !onDelete) return
 
     if (initialBlock.recurringGroupId) {
       setShowDeleteConfirm(true)
     } else {
-      onDelete(initialBlock.id)
+      await onDelete(initialBlock.id)
       onClose()
     }
   }
@@ -272,10 +278,10 @@ export function BlockForm({
             type="button"
             variant="ghost"
             className="text-[#10B981] hover:text-[#10B981] hover:bg-[#10B981]/10 px-2 text-xs"
-            onClick={() => {
+            onClick={async () => {
               const name = title.trim() || initialBlock.title
               const color = blockColor || initialBlock.color || "#10B981"
-              onConvertToHabit(name, color)
+              await onConvertToHabit?.(name, color)
               onClose()
             }}
             title="Jadikan Habit"
@@ -286,8 +292,8 @@ export function BlockForm({
         <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" className="flex-1">
-          {initialBlock ? "Update" : "Save Block"}
+        <Button type="submit" className="flex-1" disabled={saving}>
+          {saving ? "Saving..." : initialBlock ? "Update" : "Save Block"}
         </Button>
       </div>
     </form>
@@ -298,9 +304,9 @@ export function BlockForm({
           <Button
             variant="secondary"
             className="w-full"
-            onClick={() => {
+            onClick={async () => {
               if (initialBlock && onDelete) {
-                onDelete(initialBlock.id)
+                await onDelete(initialBlock.id)
               }
               onClose()
             }}
@@ -310,9 +316,9 @@ export function BlockForm({
           <Button
             variant="ghost"
             className="w-full text-error hover:text-error hover:bg-error/10"
-            onClick={() => {
+            onClick={async () => {
               if (initialBlock?.recurringGroupId && onDeleteSeries) {
-                onDeleteSeries(initialBlock.recurringGroupId)
+                await onDeleteSeries(initialBlock.recurringGroupId)
               }
               onClose()
             }}

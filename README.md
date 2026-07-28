@@ -1,6 +1,6 @@
-# Time Blocking
+# Focus
 
-Aplikasi time blocking PWA berbasis web untuk perencanaan harian yang visual, modern, dan offline penuh.
+Aplikasi PWA berbasis web untuk perencanaan harian yang visual, modern, dan offline penuh.
 
 ## Fitur
 
@@ -9,7 +9,7 @@ Aplikasi time blocking PWA berbasis web untuk perencanaan harian yang visual, mo
 - **Hari Ini** — Timeline vertikal dengan drag-and-drop block. Tinggi block otomatis sesuai durasi.
 - **Mingguan** — Grid 7 hari dengan daftar lengkap block minggu ini.
 - **Recurring Block** — Block berulang harian/mingguan dengan opsi hapus seluruh seri.
-- **Focus Timer** — Timer Pomodoro berbasis stopwatch yang terhubung dengan time block. Break proporsional dengan durasi fokus. Bip di setiap milestone.
+- **Focus Timer** — Timer Pomodoro berbasis stopwatch yang terhubung dengan blok waktu. Break proporsional dengan durasi fokus. Bip di setiap milestone.
 - **Timer Persisten** — Timer tetap jalan saat navigasi halaman. Floating timer bar di bawah untuk pause/stop dari mana saja.
 - **One-Click Break** — Tombol "Rest" mulai break tanpa stop fokus; "Stop" simpan fokus dan kembali idle.
 - **Sesi Tracking** — Setiap sesi fokus tercatat per block dengan durasi dan timestamp.

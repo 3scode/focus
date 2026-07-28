@@ -2,7 +2,9 @@
 
 import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
-import { addWeeks, subWeeks, format } from "date-fns"
+import { addWeeks } from "date-fns/addWeeks"
+import { subWeeks } from "date-fns/subWeeks"
+import { format } from "date-fns/format"
 import { AuthGuard } from "@/components/layout/AuthGuard"
 import { WeekGrid } from "@/components/blocks/WeekGrid"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"

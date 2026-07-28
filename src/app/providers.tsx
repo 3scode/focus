@@ -10,7 +10,9 @@ import { Agentation } from "agentation"
 
 export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
-    registerServiceWorker()
+    if (process.env.NODE_ENV !== "development") {
+      registerServiceWorker()
+    }
   }, [])
 
   return (

@@ -1,23 +1,29 @@
 import { NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { auth } from "@/lib/auth"
 import { db } from "@/db"
 import { categories } from "@/db/schema"
 import { eq } from "drizzle-orm"
 
-export async function GET() {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const data = await db.select().from(categories).where(eq(categories.userId, userId)).orderBy(categories.order)
+export async function GET(req: Request) {
+  const session = await auth.api.getSession({ headers: req.headers })
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const data = await db.select().from(categories).where(eq(categories.userId, session.user.id))
   return NextResponse.json(data)
 }
 
 export async function POST(req: Request) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const cats = await req.json() as { id: string; name: string; color: string; order: number }[]
-  await db.delete(categories).where(eq(categories.userId, userId))
-  if (cats.length > 0) {
-    await db.insert(categories).values(cats.map(c => ({ ...c, userId })))
-  }
+  const session = await auth.api.getSession({ headers: req.headers })
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const body = await req.json()
+  const { id, ...rest } = body
+  await db.insert(categories).values({ id, ...rest, userId: session.user.id }).onConflictDoUpdate({ target: categories.id, set: { ...rest, userId: session.user.id } })
+  return NextResponse.json({ success: true })
+}
+
+export async function DELETE(req: Request) {
+  const session = await auth.api.getSession({ headers: req.headers })
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { id } = await req.json()
+  await db.delete(categories).where(eq(categories.id, id))
   return NextResponse.json({ success: true })
 }

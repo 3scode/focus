@@ -1,11 +1,12 @@
 "use client"
 
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useCallback, useEffect, useState, useRef, type ReactNode } from "react"
 import type { Block, Category, FocusSession, Habit, HabitRecord, Settings } from "@/types"
-import * as storage from "@/lib/storage"
+import * as api from "@/lib/api"
 import { formatDate, calcDuration } from "@/lib/time"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/constants"
 import { toast } from "sonner"
+import { useAuth } from "@/store/auth"
 
 interface AppState {
   blocks: Block[]
@@ -31,6 +32,7 @@ interface AppContextValue extends AppState {
   addFocusSession: (session: FocusSession) => Promise<void>
   setHabits: (habits: Habit[]) => Promise<void>
   addHabit: (habit: Habit) => Promise<void>
+  updateHabit: (id: string, data: Partial<Habit>) => Promise<void>
   deleteHabit: (id: string) => Promise<void>
   addHabitRecord: (record: HabitRecord) => Promise<void>
   deleteHabitRecord: (id: string) => Promise<void>
@@ -50,173 +52,277 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()))
   const [loading, setLoading] = useState(true)
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null)
+  const { user } = useAuth()
+  const blocksRef = useRef(blocks)
+
+  useEffect(() => {
+    blocksRef.current = blocks
+  }, [blocks])
 
   useEffect(() => {
     let mounted = true
     ;(async () => {
-      const [b, c, h, hr, s] = await Promise.all([
-        storage.getBlocks(),
-        storage.getCategories(),
-        storage.getHabits(),
-        storage.getHabitRecords(),
-        storage.getSettings(),
-      ])
-      if (!mounted) return
-      setBlocks(b)
-      setCats(c)
-      setHabitsState(h)
-      setHabitRecordsState(hr)
-      setSettingsState(s)
-      document.documentElement.classList.toggle("dark", s.theme === "dark")
-      setLoading(false)
+      if (!user) {
+        if (mounted) setLoading(false)
+        return
+      }
+      try {
+        const [b, c, h, hr, s] = await Promise.all([
+          api.getBlocks(),
+          api.getCategories(),
+          api.getHabits(),
+          api.getHabitRecords(),
+          api.getSettings(),
+        ])
+        if (!mounted) return
+        setBlocks(b)
+        setCats(c)
+        setHabitsState(h)
+        setHabitRecordsState(hr)
+        setSettingsState(s)
+        document.documentElement.classList.toggle("dark", s.theme === "dark")
+      } catch {
+        toast.error("Gagal memuat data")
+      } finally {
+        if (mounted) setLoading(false)
+      }
     })()
     return () => { mounted = false }
-  }, [])
+  }, [user])
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", settings.theme === "dark")
   }, [settings.theme])
 
   const addBlock = useCallback(async (block: Block) => {
-    await storage.saveBlock(block)
-    setBlocks((prev) => [...prev, block])
+    try {
+      await api.saveBlock(block)
+      setBlocks((prev) => [...prev, block])
+      toast.success("Block ditambahkan")
+    } catch {
+      toast.error("Gagal menambahkan block")
+    }
   }, [])
 
   const updateBlock = useCallback(async (block: Block) => {
-    await storage.saveBlock(block)
-    setBlocks((prev) => prev.map((b) => (b.id === block.id ? block : b)))
+    try {
+      await api.saveBlock(block)
+      setBlocks((prev) => prev.map((b) => (b.id === block.id ? block : b)))
+      toast.success("Block diperbarui")
+    } catch {
+      toast.error("Gagal memperbarui block")
+    }
   }, [])
 
   const removeBlock = useCallback(async (id: string) => {
-    await storage.deleteBlock(id)
-    setBlocks((prev) => prev.filter((b) => b.id !== id))
+    try {
+      await api.deleteBlock(id)
+      setBlocks((prev) => prev.filter((b) => b.id !== id))
+      toast.success("Block dihapus")
+    } catch {
+      toast.error("Gagal menghapus block")
+    }
   }, [])
 
   const removeRecurringSeries = useCallback(async (groupId: string) => {
-    await storage.deleteRecurringSeries(groupId)
-    setBlocks((prev) => prev.filter((b) => b.recurringGroupId !== groupId))
+    try {
+      await api.deleteRecurringSeries(groupId)
+      setBlocks((prev) => prev.filter((b) => b.recurringGroupId !== groupId))
+      toast.success("Semua block berulang dihapus")
+    } catch {
+      toast.error("Gagal menghapus series")
+    }
   }, [])
 
   const toggleBlockComplete = useCallback(async (id: string, confirmed?: boolean) => {
-    const blocksList = await storage.getBlocks()
-    const block = blocksList.find((b) => b.id === id)
+    const block = blocksRef.current.find((b) => b.id === id)
     if (!block) return
-    
+
     if (!block.completed && !confirmed) {
       const taskDurationMins = calcDuration(block.startTime, block.endTime)
       const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
-      
+
       if (totalFocusMins < taskDurationMins) {
         const progressPercent = Math.round((totalFocusMins / taskDurationMins) * 100)
         toast.error(`Task belum selesai! Progress: ${progressPercent}% (${totalFocusMins}/${taskDurationMins} menit)`)
         return
       }
     }
-    
-    block.completed = !block.completed
-    if (block.completed) block.missed = false
-    block.updatedAt = new Date().toISOString()
-    await storage.saveBlock(block)
-    setBlocks((prev) => prev.map((b) => (b.id === id ? block : b)))
+
+    const updated: Block = {
+      ...block,
+      completed: !block.completed,
+      missed: block.completed ? false : block.missed,
+      updatedAt: new Date().toISOString(),
+    }
+    try {
+      await api.saveBlock(updated)
+      setBlocks((prev) => prev.map((b) => (b.id === id ? updated : b)))
+      toast.success(updated.completed ? "Block selesai" : "Block dibatalkan")
+    } catch {
+      toast.error("Gagal menyimpan perubahan")
+    }
   }, [])
 
   const toggleBlockMissed = useCallback(async (id: string) => {
-    const blocksList = await storage.getBlocks()
-    const block = blocksList.find((b) => b.id === id)
+    const block = blocksRef.current.find((b) => b.id === id)
     if (!block) return
-    block.missed = !block.missed
-    if (block.missed) block.completed = false
-    block.updatedAt = new Date().toISOString()
-    await storage.saveBlock(block)
-    setBlocks((prev) => prev.map((b) => (b.id === id ? block : b)))
+
+    const updated: Block = {
+      ...block,
+      missed: !block.missed,
+      completed: !block.missed ? false : block.completed,
+      updatedAt: new Date().toISOString(),
+    }
+    try {
+      await api.saveBlock(updated)
+      setBlocks((prev) => prev.map((b) => (b.id === id ? updated : b)))
+      toast.success(updated.missed ? "Block ditandai missed" : "Block dibatalkan missed")
+    } catch {
+      toast.error("Gagal menyimpan perubahan")
+    }
   }, [])
 
   const updateCategories = useCallback(async (cats: Category[]) => {
-    await storage.setCategories(cats)
-    setCats(cats)
+    try {
+      await api.setCategories(cats)
+      setCats(cats)
+      toast.success("Kategori diperbarui")
+    } catch {
+      toast.error("Gagal memperbarui kategori")
+    }
   }, [])
 
   const updateSettings = useCallback(async (s: Settings) => {
-    await storage.setSettings(s)
-    setSettingsState(s)
+    try {
+      await api.setSettings(s)
+      setSettingsState(s)
+      toast.success("Pengaturan disimpan")
+    } catch {
+      toast.error("Gagal menyimpan pengaturan")
+    }
   }, [])
 
   const addFocusSession = useCallback(async (session: FocusSession) => {
-    await storage.saveFocusSession(session)
-    const blocksList = await storage.getBlocks()
-    const block = blocksList.find((b) => b.id === session.blockId)
-    if (block) {
-      block.focusSessions = [...(block.focusSessions || []), session]
-      
-      const taskDurationMins = calcDuration(block.startTime, block.endTime)
-      const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
-      
-      if (totalFocusMins >= taskDurationMins) {
-        block.completed = true
-      }
-      
-      block.updatedAt = new Date().toISOString()
-      await storage.saveBlock(block)
-      setBlocks((prev) => prev.map((b) => (b.id === block.id ? block : b)))
+    try {
+      await api.saveFocusSession(session)
+    } catch {
+      toast.error("Gagal menyimpan sesi fokus")
+      return
+    }
+
+    const block = blocksRef.current.find((b) => b.id === session.blockId)
+    if (!block) return
+
+    const allSessions = [...(block.focusSessions || []), session]
+    const taskDurationMins = calcDuration(block.startTime, block.endTime)
+    const totalFocusMins = allSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
+    const shouldComplete = totalFocusMins >= taskDurationMins
+
+    const updated: Block = {
+      ...block,
+      focusSessions: allSessions,
+      completed: shouldComplete || block.completed,
+      updatedAt: new Date().toISOString(),
+    }
+    try {
+      await api.saveBlock(updated)
+      setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
+    } catch {
+      toast.error("Gagal memperbarui block setelah sesi fokus")
     }
   }, [])
 
   const setHabits = useCallback(async (h: Habit[]) => {
-    await storage.setHabits(h)
-    setHabitsState(h)
+    try {
+      await api.setHabits(h)
+      setHabitsState(h)
+      toast.success("Habits disimpan")
+    } catch {
+      toast.error("Gagal menyimpan habits")
+    }
   }, [])
 
   const addHabit = useCallback(async (habit: Habit) => {
-    const h = await storage.getHabits()
-    h.push(habit)
-    await storage.setHabits(h)
-    setHabitsState(h)
+    try {
+      const created = await api.addHabit(habit)
+      setHabitsState((prev) => [...prev, created])
+      toast.success("Habit ditambahkan")
+    } catch {
+      toast.error("Gagal menambahkan habit")
+    }
+  }, [])
+
+  const updateHabit = useCallback(async (id: string, data: Partial<Habit>) => {
+    try {
+      await api.updateHabit(id, data)
+      setHabitsState((prev) => prev.map((h) => (h.id === id ? { ...h, ...data } : h)))
+    } catch {
+      toast.error("Gagal memperbarui habit")
+    }
   }, [])
 
   const deleteHabit = useCallback(async (id: string) => {
-    const h = await storage.getHabits()
-    const filtered = h.filter((hab) => hab.id !== id)
-    await storage.setHabits(filtered)
-    setHabitsState(filtered)
-    const records = await storage.getHabitRecords()
-    const filteredRecords = records.filter((r) => r.habitId !== id)
-    await storage.setHabitRecords(filteredRecords)
-    setHabitRecordsState(filteredRecords)
+    try {
+      await api.deleteHabit(id)
+      setHabitsState((prev) => prev.filter((h) => h.id !== id))
+      setHabitRecordsState((prev) => prev.filter((r) => r.habitId !== id))
+      toast.success("Habit dihapus")
+    } catch {
+      toast.error("Gagal menghapus habit")
+    }
   }, [])
 
   const addHabitRecord = useCallback(async (record: HabitRecord) => {
-    await storage.saveHabitRecord(record)
-    setHabitRecordsState((prev) => [...prev, record])
+    try {
+      await api.saveHabitRecord(record)
+      setHabitRecordsState((prev) => [...prev, record])
+    } catch {
+      toast.error("Gagal menyimpan record")
+    }
   }, [])
 
   const deleteHabitRecord = useCallback(async (id: string) => {
-    await storage.deleteHabitRecord(id)
-    setHabitRecordsState((prev) => prev.filter((r) => r.id !== id))
+    try {
+      await api.deleteHabitRecord(id)
+      setHabitRecordsState((prev) => prev.filter((r) => r.id !== id))
+    } catch {
+      toast.error("Gagal menghapus record")
+    }
   }, [])
 
   const refresh = useCallback(async () => {
-    const [b, c, h, hr, s] = await Promise.all([
-      storage.getBlocks(),
-      storage.getCategories(),
-      storage.getHabits(),
-      storage.getHabitRecords(),
-      storage.getSettings(),
-    ])
-    setBlocks(b)
-    setCats(c)
-    setHabitsState(h)
-    setHabitRecordsState(hr)
-    setSettingsState(s)
+    try {
+      const [b, c, h, hr, s] = await Promise.all([
+        api.getBlocks(),
+        api.getCategories(),
+        api.getHabits(),
+        api.getHabitRecords(),
+        api.getSettings(),
+      ])
+      setBlocks(b)
+      setCats(c)
+      setHabitsState(h)
+      setHabitRecordsState(hr)
+      setSettingsState(s)
+    } catch {
+      toast.error("Gagal refresh data")
+    }
     setLoading(false)
   }, [])
 
   const clearData = useCallback(async () => {
-    await storage.clearAllData()
-    setBlocks([])
-    setCats(DEFAULT_CATEGORIES)
-    setHabitsState([])
-    setHabitRecordsState([])
-    setSettingsState(DEFAULT_SETTINGS)
+    try {
+      await api.clearAllData()
+      setBlocks([])
+      setCats(DEFAULT_CATEGORIES)
+      setHabitsState([])
+      setHabitRecordsState([])
+      setSettingsState(DEFAULT_SETTINGS)
+      toast.success("Semua data berhasil dihapus")
+    } catch {
+      toast.error("Gagal menghapus data")
+    }
   }, [])
 
   return (
@@ -225,7 +331,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         blocks, categories, habits, habitRecords, settings, selectedDate, loading,
         refresh, setSelectedDate, addBlock, updateBlock, removeBlock, removeRecurringSeries,
         toggleBlockComplete, toggleBlockMissed, updateCategories, updateSettings,
-        addFocusSession, setHabits, addHabit, deleteHabit, addHabitRecord, deleteHabitRecord, clearData,
+        addFocusSession, setHabits, addHabit, updateHabit, deleteHabit, addHabitRecord, deleteHabitRecord, clearData,
         activeBlockId, setActiveBlockId,
       }}
     >

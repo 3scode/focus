@@ -26,25 +26,26 @@ export function useTimer(initialMinutes: number, onComplete?: () => void) {
 
   useEffect(() => {
     clear()
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    /* eslint-disable react-hooks/set-state-in-effect */
     setTimeLeft(initialMinutes * 60)
     setIsRunning(false)
     setIsPaused(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialMinutes])
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [initialMinutes, clear])
+
+  useEffect(() => {
+    if (timeLeft <= 0 && (isRunning || isPaused)) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setIsRunning(false)
+      /* eslint-enable react-hooks/set-state-in-effect */
+      onCompleteRef.current?.()
+    }
+  }, [timeLeft, isRunning, isPaused])
 
   useEffect(() => {
     if (isRunning && !isPaused) {
       intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clear()
-            setIsRunning(false)
-            onCompleteRef.current?.()
-            return 0
-          }
-          return prev - 1
-        })
+        setTimeLeft((prev) => prev - 1)
       }, 1000)
     }
     return clear

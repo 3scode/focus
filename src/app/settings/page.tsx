@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/Modal"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
 import { useApp } from "@/store"
 import type { Block, Category, FocusSession } from "@/types"
-import * as storage from "@/lib/storage"
+import * as api from "@/lib/api"
 
 const SWATCHES = [
   "#3B82F6", "#10B981", "#F43F5E", "#8B5CF6",
@@ -47,9 +47,11 @@ function SettingsContent() {
     saveCats([...localCats, newCat])
   }, [localCats, saveCats])
 
-  const handleDeleteCategory = useCallback((id: string) => {
+  const handleDeleteCategory = useCallback(async (id: string) => {
     if (localCats.length <= 1) return
+    await api.deleteCategory(id)
     saveCats(localCats.filter((c) => c.id !== id))
+    toast.success("Kategori dihapus")
   }, [localCats, saveCats])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -73,10 +75,10 @@ function SettingsContent() {
       updateSettings(data.settings)
       setLocalCats(data.categories)
       if (data.blocks) {
-        await storage.setBlocks(data.blocks as Block[])
+        for (const b of data.blocks as Block[]) { await api.saveBlock(b) }
       }
       if (data.focusSessions) {
-        await storage.setFocusSessions(data.focusSessions as FocusSession[])
+        for (const s of data.focusSessions as FocusSession[]) { await api.saveFocusSession(s) }
       }
       toast.success("Data berhasil diimpor")
       window.location.reload()
@@ -87,15 +89,16 @@ function SettingsContent() {
   }, [updateCategories, updateSettings])
 
   const handleExport = useCallback(async () => {
-    const focusSessions = await storage.getFocusSessions()
+    const focusSessions = await api.getFocusSessions()
     const data = { blocks, categories: localCats, focusSessions, settings }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "time-blocking-export.json"
+    a.download = "focus-export.json"
     a.click()
     URL.revokeObjectURL(url)
+    toast.success("Data berhasil diexport")
   }, [blocks, localCats, settings])
 
   const handleClear = useCallback(async () => {

@@ -62,7 +62,7 @@ export function PWAInstallPrompt() {
             <Download className="w-5 h-5 text-[#5E6AD2]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-[#EDEDEF] mb-1">Install Time Blocking</h3>
+            <h3 className="text-sm font-semibold text-[#EDEDEF] mb-1">Install Focus</h3>
             <p className="text-xs text-[#8A8F98] mb-3">
               Install aplikasi ini di perangkat Anda untuk akses yang lebih cepat dan pengalaman offline.
             </p>

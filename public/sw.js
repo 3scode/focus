@@ -1,5 +1,5 @@
-// Time Blocking PWA Service Worker
-const CACHE_NAME = 'timeblock-v2';
+// Focus PWA Service Worker
+const CACHE_NAME = 'focus-v1';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache on install

@@ -1,24 +1,19 @@
+import { get, set } from "idb-keyval"
 import type { Block, Category, FocusSession, Habit, HabitRecord, Settings } from "@/types"
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "./constants"
 
-type Method = "GET" | "POST" | "PUT" | "DELETE"
-
-async function api(url: string, method: Method = "GET", body?: unknown): Promise<any> {
-  const res = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "Request failed" }))
-    throw new Error(err.error || `API error ${res.status}`)
-  }
-  return res.json()
-}
+const KEYS = {
+  BLOCKS: "time-blocking:blocks",
+  CATEGORIES: "time-blocking:categories",
+  HABITS: "time-blocking:habits",
+  HABIT_RECORDS: "time-blocking:habitRecords",
+  FOCUS_SESSIONS: "time-blocking:focusSessions",
+  SETTINGS: "time-blocking:settings",
+} as const
 
 export async function getBlocks(): Promise<Block[]> {
-  const data = await api("/api/blocks")
-  return data.map((b: any) => ({
+  const data = await get<Block[]>(KEYS.BLOCKS)
+  return (data ?? []).map((b) => ({
     ...b,
     focusSessions: b.focusSessions ?? [],
     completed: b.completed ?? false,
@@ -26,21 +21,28 @@ export async function getBlocks(): Promise<Block[]> {
 }
 
 export async function saveBlock(block: Block): Promise<void> {
-  await api("/api/blocks", "POST", block)
+  const blocks = await getBlocks()
+  const idx = blocks.findIndex((b) => b.id === block.id)
+  if (idx >= 0) {
+    blocks[idx] = block
+  } else {
+    blocks.push(block)
+  }
+  await set(KEYS.BLOCKS, blocks)
 }
 
 export async function deleteBlock(id: string): Promise<void> {
-  await api("/api/blocks", "DELETE", { id })
+  const blocks = await getBlocks()
+  await set(KEYS.BLOCKS, blocks.filter((b) => b.id !== id))
 }
 
 export async function deleteRecurringSeries(groupId: string): Promise<void> {
-  await api("/api/blocks/recurring", "DELETE", { groupId })
+  const blocks = await getBlocks()
+  await set(KEYS.BLOCKS, blocks.filter((b) => b.recurringGroupId !== groupId))
 }
 
 export async function setBlocks(blocks: Block[]): Promise<void> {
-  const existing = await getBlocks()
-  await Promise.all(existing.map((b) => deleteBlock(b.id)))
-  await Promise.all(blocks.map((b) => saveBlock(b)))
+  await set(KEYS.BLOCKS, blocks)
 }
 
 export async function getBlock(id: string): Promise<Block | null> {
@@ -56,71 +58,83 @@ export async function getBlocksByDate(date: string): Promise<Block[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const data = await api("/api/categories")
-  return data.length > 0 ? data : DEFAULT_CATEGORIES
+  const data = await get<Category[]>(KEYS.CATEGORIES)
+  return data && data.length > 0 ? data : DEFAULT_CATEGORIES
 }
 
 export async function setCategories(cats: Category[]): Promise<void> {
-  await api("/api/categories", "POST", cats)
+  await set(KEYS.CATEGORIES, cats)
 }
 
 export async function getFocusSessions(): Promise<FocusSession[]> {
-  return api("/api/focus-sessions")
+  return (await get<FocusSession[]>(KEYS.FOCUS_SESSIONS)) ?? []
 }
 
 export async function setFocusSessions(sessions: FocusSession[]): Promise<void> {
-  await api("/api/focus-sessions", "PUT", sessions)
+  await set(KEYS.FOCUS_SESSIONS, sessions)
 }
 
 export async function saveFocusSession(session: FocusSession): Promise<void> {
-  await api("/api/focus-sessions", "POST", session)
+  const sessions = await getFocusSessions()
+  sessions.push(session)
+  await set(KEYS.FOCUS_SESSIONS, sessions)
 }
 
 export async function getSettings(): Promise<Settings> {
-  const data = await api("/api/settings")
+  const data = await get<Settings>(KEYS.SETTINGS)
   return data ?? DEFAULT_SETTINGS
 }
 
 export async function setSettings(s: Partial<Settings>): Promise<void> {
-  await api("/api/settings", "POST", s)
+  const current = await getSettings()
+  await set(KEYS.SETTINGS, { ...current, ...s })
 }
 
 export async function getHabits(): Promise<Habit[]> {
-  return api("/api/habits")
+  return (await get<Habit[]>(KEYS.HABITS)) ?? []
 }
 
 export async function setHabits(h: Habit[]): Promise<void> {
-  await api("/api/habits", "PUT", h)
+  await set(KEYS.HABITS, h)
 }
 
 export async function addHabit(habit: Habit): Promise<void> {
-  await api("/api/habits", "POST", habit)
+  const habits = await getHabits()
+  habits.push(habit)
+  await set(KEYS.HABITS, habits)
 }
 
 export async function deleteHabit(id: string): Promise<void> {
-  await api(`/api/habits/${id}`, "DELETE")
+  const habits = await getHabits()
+  await set(KEYS.HABITS, habits.filter((h) => h.id !== id))
 }
 
 export async function getHabitRecords(): Promise<HabitRecord[]> {
-  return api("/api/habit-records")
+  return (await get<HabitRecord[]>(KEYS.HABIT_RECORDS)) ?? []
 }
 
 export async function setHabitRecords(records: HabitRecord[]): Promise<void> {
-  await api("/api/habit-records", "PUT", records)
+  await set(KEYS.HABIT_RECORDS, records)
 }
 
 export async function saveHabitRecord(record: HabitRecord): Promise<void> {
-  await api("/api/habit-records", "POST", record)
+  const records = await getHabitRecords()
+  records.push(record)
+  await set(KEYS.HABIT_RECORDS, records)
 }
 
 export async function deleteHabitRecord(id: string): Promise<void> {
-  await api("/api/habit-records", "DELETE", { id })
+  const records = await getHabitRecords()
+  await set(KEYS.HABIT_RECORDS, records.filter((r) => r.id !== id))
 }
 
 export async function clearAllData(): Promise<void> {
-  const [blocks, habits] = await Promise.all([getBlocks(), getHabits()])
-  await Promise.all(blocks.map((b) => deleteBlock(b.id)))
-  await Promise.all(habits.map((h) => deleteHabit(h.id)))
-  await api("/api/categories", "POST", [])
-  await api("/api/settings", "POST", DEFAULT_SETTINGS)
+  await Promise.all([
+    set(KEYS.BLOCKS, []),
+    set(KEYS.CATEGORIES, DEFAULT_CATEGORIES),
+    set(KEYS.HABITS, []),
+    set(KEYS.HABIT_RECORDS, []),
+    set(KEYS.FOCUS_SESSIONS, []),
+    set(KEYS.SETTINGS, DEFAULT_SETTINGS),
+  ])
 }

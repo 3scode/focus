@@ -3,6 +3,8 @@
 import { useEffect, useRef, type ReactNode } from "react"
 import { X } from "lucide-react"
 
+let modalDepth = 0
+
 interface ModalProps {
   open: boolean
   title: string
@@ -19,10 +21,12 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
       if (e.key === "Escape") onClose()
     }
     document.addEventListener("keydown", handler)
-    document.body.style.overflow = "hidden"
+    modalDepth++
+    if (modalDepth === 1) document.body.style.overflow = "hidden"
     return () => {
       document.removeEventListener("keydown", handler)
-      document.body.style.overflow = ""
+      modalDepth--
+      if (modalDepth === 0) document.body.style.overflow = ""
     }
   }, [open, onClose])
 
@@ -53,7 +57,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-white/[0.05] text-[#8A8F98] transition-colors"
-            aria-label="Close"
+            aria-label="Tutup"
           >
             <X className="w-5 h-5" />
           </button>

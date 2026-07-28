@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronLeft, ChevronRight, Timer, CheckCircle2, TrendingUp } from "lucide-react"
+import { ChevronLeft, ChevronRight, Timer, CheckCircle2, TrendingUp, X, Check } from "lucide-react"
 import { DayCard } from "./DayCard"
 import { getWeekDays, isToday, format, formatDuration, calcDuration } from "@/lib/time"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
@@ -199,19 +199,19 @@ export function WeekGrid({
                   {!block.completed && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onToggleMissed(block.id) }}
-                      className="shrink-0 text-sm leading-none opacity-80 hover:opacity-100"
+                      className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/30 transition-colors"
                       aria-label={isMissed ? "Mark pending" : "Mark missed"}
                     >
-                      ✕
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {!isMissed && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleToggleComplete(block) }}
-                      className="shrink-0 text-sm leading-none opacity-80 hover:opacity-100"
+                      className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                       aria-label={block.completed ? "Mark incomplete" : "Mark complete"}
                     >
-                      ✓
+                      <Check className="w-3.5 h-3.5" />
                     </button>
                   )}
                   <div

@@ -3,8 +3,11 @@
 import { useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
-import { toast } from "sonner"
-import { addDays, subDays, format, parseISO } from "date-fns"
+import { v4 as uuidv4 } from "uuid"
+import { addDays } from "date-fns/addDays"
+import { subDays } from "date-fns/subDays"
+import { format } from "date-fns/format"
+import { parseISO } from "date-fns/parseISO"
 import { AuthGuard } from "@/components/layout/AuthGuard"
 import { Timeline } from "@/components/blocks/Timeline"
 import { Modal } from "@/components/ui/Modal"
@@ -15,11 +18,11 @@ import { useApp } from "@/store"
 import { useBlocksByDate, useDailyProgress } from "@/hooks/useBlocks"
 import { formatDisplayDate, generateRecurringBlocks } from "@/lib/time"
 import type { Block } from "@/types"
-import * as storage from "@/lib/storage"
+import * as api from "@/lib/api"
 
 function TodayContent() {
   const router = useRouter()
-  const { categories, settings, selectedDate, setSelectedDate, addBlock, updateBlock, removeBlock, removeRecurringSeries, setActiveBlockId } = useApp()
+  const { categories, settings, selectedDate, setSelectedDate, addBlock, updateBlock, removeBlock, removeRecurringSeries, setActiveBlockId, addHabit: storeAddHabit } = useApp()
 
   const currentDate = selectedDate
 
@@ -87,7 +90,7 @@ function TodayContent() {
     if (editBlock) {
       await updateBlock(block)
       if (block.recurring && block.recurringGroupId) {
-        const allBlocks = await storage.getBlocks()
+        const allBlocks = await api.getBlocks()
         const oldSeries = allBlocks.filter((b) => b.recurringGroupId === block.recurringGroupId && b.id !== block.id)
         for (const b of oldSeries) {
           await removeBlock(b.id)
@@ -139,7 +142,7 @@ function TodayContent() {
           className="sticky top-0 z-10 px-4 py-3"
           style={{ background: "rgba(5,5,6,0.8)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
         >
-          <div className="flex items-center justify-between max-w-3xl mx-auto">
+          <div className="flex items-center justify-between max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
             <div className="flex items-center gap-2">
               <button onClick={prevDay} className="p-1 rounded-lg hover:bg-white/[0.05] text-[#8A8F98]">
                 <ChevronLeft className="w-5 h-5" />
@@ -152,7 +155,7 @@ function TodayContent() {
           </div>
         </header>
 
-        <div className="flex-1 max-w-3xl w-full mx-auto px-4 py-6 space-y-6">
+        <div className="flex-1 max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
           {blocks.length === 0 && !showForm ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-[#8A8F98] mb-2">No blocks yet</p>
@@ -216,18 +219,15 @@ function TodayContent() {
           onDelete={handleDeleteBlock}
           onDeleteSeries={handleDeleteSeries}
           onConvertToHabit={async (name, color) => {
-            const uuidMod = await import("uuid")
-            const habits = await storage.getHabits()
             const newHabit = {
-              id: uuidMod.v4(),
+              id: uuidv4(),
               name,
               color,
               frequency: "daily" as const,
-              order: habits.length,
+              order: 0,
               createdAt: new Date().toISOString(),
             }
-            await storage.setHabits([...habits, newHabit])
-            toast.success(`"${name}" berhasil dijadikan habit`)
+            await storeAddHabit(newHabit)
           }}
           onClose={() => { setShowForm(false); setEditBlock(null); setPreselectedTime(undefined) }}
         />

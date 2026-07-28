@@ -25,11 +25,11 @@ export const TimeBlock = memo(function TimeBlock({
         borderLeft: `3px solid ${categoryColor}`,
         background: `linear-gradient(to right, ${categoryColor}40, ${categoryColor}20)`,
       }}
-      onClick={() => onTap(block.id)}
+      onClick={(e) => { e.stopPropagation(); onTap(block.id) }}
       role="button"
       aria-label={`Block: ${block.title}`}
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter") onTap(block.id) }}
+      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onTap(block.id) } }}
     >
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {block.completed && <CheckCircle2 className="w-3.5 h-3.5 text-white/90 shrink-0" />}
