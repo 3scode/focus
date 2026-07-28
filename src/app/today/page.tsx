@@ -90,6 +90,7 @@ function TodayContent() {
     if (editBlock) {
       await updateBlock(block)
       if (block.recurring && block.recurringGroupId) {
+        // Regenerate series dengan pengaturan baru
         const allBlocks = await api.getBlocks()
         const oldSeries = allBlocks.filter((b) => b.recurringGroupId === block.recurringGroupId && b.id !== block.id)
         for (const b of oldSeries) {
@@ -100,6 +101,13 @@ function TodayContent() {
           if (b.date !== block.date) {
             await addBlock(b)
           }
+        }
+      } else if (editBlock.recurring && editBlock.recurringGroupId && !block.recurring) {
+        // Recurring dimatikan → hapus semua block dari series
+        const allBlocks = await api.getBlocks()
+        const oldSeries = allBlocks.filter((b) => b.recurringGroupId === editBlock.recurringGroupId && b.id !== block.id)
+        for (const b of oldSeries) {
+          await removeBlock(b.id)
         }
       }
     } else {

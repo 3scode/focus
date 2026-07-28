@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { Clock, Trash2, Repeat } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -54,6 +54,15 @@ export function BlockForm({
   const [saving, setSaving] = useState(false)
 
   const duration = calcDuration(startTime, endTime)
+
+  // Set default end date (30 hari) saat recurring pertama kali diaktifkan
+  useEffect(() => {
+    if (isRecurring && !recurringEndDate && !initialBlock) {
+      const d = new Date(recurringStartDate)
+      d.setDate(d.getDate() + 30)
+      setRecurringEndDate(d.toISOString().split("T")[0])
+    }
+  }, [isRecurring])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -227,7 +236,7 @@ export function BlockForm({
           </label>
         </div>
         {isRecurring && (
-          <div className="mt-4 pl-8 grid grid-cols-2 gap-4">
+          <div className="mt-4 pl-8 grid grid-cols-3 gap-3">
             <div>
               <label className="block text-xs text-text-secondary mb-1">Repeats</label>
               <select
@@ -240,7 +249,7 @@ export function BlockForm({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-text-secondary mb-1">Starting from</label>
+              <label className="block text-xs text-text-secondary mb-1">From</label>
               <input
                 type="date"
                 value={recurringStartDate}
