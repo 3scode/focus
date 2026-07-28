@@ -99,7 +99,7 @@ function TodayContent() {
         const generated = generateRecurringBlocks(block)
         for (const b of generated) {
           if (b.date !== block.date) {
-            await addBlock(b)
+            await addBlock(b, true)
           }
         }
       } else if (editBlock.recurring && editBlock.recurringGroupId && !block.recurring) {
@@ -116,7 +116,7 @@ function TodayContent() {
         const generated = generateRecurringBlocks(block)
         for (const b of generated) {
           if (b.date !== block.date) {
-            await addBlock(b)
+            await addBlock(b, true)
           }
         }
       } else {

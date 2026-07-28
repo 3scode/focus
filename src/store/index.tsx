@@ -21,7 +21,7 @@ interface AppState {
 interface AppContextValue extends AppState {
   refresh: () => Promise<void>
   setSelectedDate: (date: string) => void
-  addBlock: (block: Block) => Promise<void>
+  addBlock: (block: Block, silent?: boolean) => Promise<void>
   updateBlock: (block: Block) => Promise<void>
   removeBlock: (id: string) => Promise<void>
   removeRecurringSeries: (groupId: string) => Promise<void>
@@ -94,13 +94,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle("dark", settings.theme === "dark")
   }, [settings.theme])
 
-  const addBlock = useCallback(async (block: Block) => {
+  const addBlock = useCallback(async (block: Block, silent?: boolean) => {
     try {
       await api.saveBlock(block)
       setBlocks((prev) => [...prev, block])
-      toast.success("Block ditambahkan")
+      if (!silent) toast.success("Block ditambahkan")
     } catch {
-      toast.error("Gagal menambahkan block")
+      if (!silent) toast.error("Gagal menambahkan block")
     }
   }, [])
 
