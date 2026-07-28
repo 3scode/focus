@@ -94,7 +94,7 @@ function TodayContent() {
         const allBlocks = await api.getBlocks()
         const oldSeries = allBlocks.filter((b) => b.recurringGroupId === block.recurringGroupId && b.id !== block.id)
         for (const b of oldSeries) {
-          await removeBlock(b.id)
+          await removeBlock(b.id, true)
         }
         const generated = generateRecurringBlocks(block)
         for (const b of generated) {
@@ -107,7 +107,7 @@ function TodayContent() {
         const allBlocks = await api.getBlocks()
         const oldSeries = allBlocks.filter((b) => b.recurringGroupId === editBlock.recurringGroupId && b.id !== block.id)
         for (const b of oldSeries) {
-          await removeBlock(b.id)
+          await removeBlock(b.id, true)
         }
       }
     } else {

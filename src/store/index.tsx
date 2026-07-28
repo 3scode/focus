@@ -23,7 +23,7 @@ interface AppContextValue extends AppState {
   setSelectedDate: (date: string) => void
   addBlock: (block: Block, silent?: boolean) => Promise<void>
   updateBlock: (block: Block) => Promise<void>
-  removeBlock: (id: string) => Promise<void>
+  removeBlock: (id: string, silent?: boolean) => Promise<void>
   removeRecurringSeries: (groupId: string) => Promise<void>
   toggleBlockComplete: (id: string, confirmed?: boolean) => Promise<void>
   toggleBlockMissed: (id: string) => Promise<void>
@@ -114,13 +114,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const removeBlock = useCallback(async (id: string) => {
+  const removeBlock = useCallback(async (id: string, silent?: boolean) => {
     try {
       await api.deleteBlock(id)
       setBlocks((prev) => prev.filter((b) => b.id !== id))
-      toast.success("Block dihapus")
+      if (!silent) toast.success("Block dihapus")
     } catch {
-      toast.error("Gagal menghapus block")
+      if (!silent) toast.error("Gagal menghapus block")
     }
   }, [])
 

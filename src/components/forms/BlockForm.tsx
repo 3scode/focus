@@ -55,9 +55,9 @@ export function BlockForm({
 
   const duration = calcDuration(startTime, endTime)
 
-  // Set default end date (30 hari) saat recurring pertama kali diaktifkan
+  // Set default end date (30 hari) saat recurring diaktifkan dan end date kosong
   useEffect(() => {
-    if (isRecurring && !recurringEndDate && !initialBlock) {
+    if (isRecurring && !recurringEndDate) {
       const d = new Date(recurringStartDate)
       d.setDate(d.getDate() + 30)
       setRecurringEndDate(d.toISOString().split("T")[0])
@@ -78,6 +78,10 @@ export function BlockForm({
     }
     if (duration < 15) {
       setError("Minimum duration is 15 minutes")
+      return
+    }
+    if (isRecurring && recurringEndDate && recurringEndDate < recurringStartDate) {
+      setError("Until date must be after From date")
       return
     }
 
