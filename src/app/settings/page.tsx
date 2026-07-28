@@ -40,7 +40,7 @@ function SettingsContent() {
   const handleAddCategory = useCallback(() => {
     const newCat: Category = {
       id: uuidv4(),
-      name: "New Category",
+      name: "Kategori Baru",
       color: SWATCHES[Math.floor(Math.random() * SWATCHES.length)],
       order: localCats.length,
     }
@@ -112,11 +112,11 @@ function SettingsContent() {
       <Sidebar />
       <main className="flex-1 pb-16 md:pb-0">
         <div className="max-w-xl mx-auto px-4 py-6 space-y-8">
-          <h1 className="text-lg font-semibold text-[#EDEDEF]">Settings</h1>
+          <h1 className="text-lg font-semibold text-[#EDEDEF]">Pengaturan</h1>
 
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-[#8A8F98]">Categories</h2>
+              <h2 className="text-sm font-semibold text-[#8A8F98]">Kategori</h2>
               <button onClick={handleAddCategory} className="p-1 rounded-lg hover:bg-white/[0.05] text-[#8A8F98]">
                 <Plus className="w-4 h-4" />
               </button>
@@ -163,7 +163,7 @@ function SettingsContent() {
                             style={{ background: "rgba(255,255,255,0.05)" }}
                             onClick={() => { setEditingCat(null); setPendingColor(null) }}
                           >
-                            Cancel
+                            Batal
                           </button>
                           <button
                             className="px-4 py-1.5 text-sm font-medium text-white rounded-lg transition-colors bg-[#5E6AD2] hover:bg-[#6872D9]"
@@ -194,7 +194,7 @@ function SettingsContent() {
           </section>
 
           <section>
-            <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">Preferences</h2>
+            <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">Preferensi</h2>
             <div className="space-y-2">
               <div
                 className="flex items-center justify-between px-3 py-2 rounded-lg"
@@ -204,7 +204,7 @@ function SettingsContent() {
                   boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
                 }}
               >
-                <span className="text-sm text-[#EDEDEF]">Day start</span>
+                <span className="text-sm text-[#EDEDEF]">Mulai hari</span>
                 <input
                   type="time"
                   value={settings.dayStart ?? "08:00"}
@@ -220,7 +220,7 @@ function SettingsContent() {
                   boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
                 }}
               >
-                <span className="text-sm text-[#EDEDEF]">Day end</span>
+                <span className="text-sm text-[#EDEDEF]">Akhir hari</span>
                 <input
                   type="time"
                   value={settings.dayEnd ?? "18:00"}
@@ -236,7 +236,7 @@ function SettingsContent() {
                   boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
                 }}
               >
-                <span className="text-sm text-[#EDEDEF]">Focus timer (min)</span>
+                <span className="text-sm text-[#EDEDEF]">Timer fokus (menit)</span>
                 <input
                   type="number"
                   min={5}
@@ -254,7 +254,7 @@ function SettingsContent() {
                   boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
                 }}
               >
-                <span className="text-sm text-[#EDEDEF]">Break (min)</span>
+                <span className="text-sm text-[#EDEDEF]">Istirahat (menit)</span>
                 <input
                   type="number"
                   min={1}
@@ -271,14 +271,14 @@ function SettingsContent() {
             <h2 className="text-sm font-semibold text-[#8A8F98] mb-3">Data</h2>
             <div className="space-y-2">
               <Button variant="secondary" className="w-full justify-start" onClick={handleImport}>
-                <Upload className="w-4 h-4" /> Import Data
+                <Upload className="w-4 h-4" /> Impor Data
               </Button>
               <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileChange} />
               <Button variant="secondary" className="w-full justify-start" onClick={handleExport}>
-                <Download className="w-4 h-4" /> Export Data
+                <Download className="w-4 h-4" /> Ekspor Data
               </Button>
               <Button variant="ghost" className="w-full justify-start text-[#EF4444] hover:text-[#EF4444]" onClick={() => setShowClearConfirm(true)}>
-                <AlertTriangle className="w-4 h-4" /> Clear All Data
+                <AlertTriangle className="w-4 h-4" /> Hapus Semua Data
               </Button>
             </div>
           </section>
@@ -286,12 +286,12 @@ function SettingsContent() {
       </main>
       <BottomTab />
 
-      <Modal open={showClearConfirm} title="Clear All Data?" onClose={() => setShowClearConfirm(false)}>
+      <Modal open={showClearConfirm} title="Hapus Semua Data?" onClose={() => setShowClearConfirm(false)}>
         <div className="space-y-4">
-          <p className="text-sm text-[#8A8F98]">This will permanently delete all your blocks, categories, and settings. This action cannot be undone.</p>
+          <p className="text-sm text-[#8A8F98]">Ini akan menghapus semua block, kategori, dan pengaturan. Tindakan ini tidak bisa dibatalkan.</p>
           <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={() => setShowClearConfirm(false)}>Cancel</Button>
-            <Button className="flex-1" onClick={handleClear} style={{ background: "#EF4444" }}>Clear Everything</Button>
+            <Button variant="secondary" className="flex-1" onClick={() => setShowClearConfirm(false)}>Batal</Button>
+            <Button className="flex-1" onClick={handleClear} style={{ background: "#EF4444" }}>Hapus Semua</Button>
           </div>
         </div>
       </Modal>

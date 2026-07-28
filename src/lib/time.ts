@@ -47,6 +47,49 @@ export function calcEndTime(start: string, dur: number): string {
   return `${String(Math.floor(t / 60) % 24).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`
 }
 
+export function getMonthDays(date: Date): Date[][] {
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startPad = firstDay.getDay() // 0=Sun
+  const totalDays = lastDay.getDate()
+
+  const weeks: Date[][] = []
+  let week: Date[] = []
+
+  // Padding days from previous month
+  for (let i = startPad - 1; i >= 0; i--) {
+    const d = new Date(year, month, -i)
+    d.setHours(0, 0, 0, 0)
+    week.push(d)
+  }
+
+  // Actual days
+  for (let d = 1; d <= totalDays; d++) {
+    const dateObj = new Date(year, month, d)
+    dateObj.setHours(0, 0, 0, 0)
+    week.push(dateObj)
+    if (week.length === 7) {
+      weeks.push(week)
+      week = []
+    }
+  }
+
+  // Padding days from next month
+  if (week.length > 0) {
+    const remaining = 7 - week.length
+    for (let i = 1; i <= remaining; i++) {
+      const d = new Date(year, month + 1, i)
+      d.setHours(0, 0, 0, 0)
+      week.push(d)
+    }
+    weeks.push(week)
+  }
+
+  return weeks
+}
+
 export function getWeekDays(date: Date): Date[] {
   const d = new Date(date)
   const day = d.getDay()

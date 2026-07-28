@@ -7,6 +7,7 @@ Aplikasi PWA berbasis web untuk perencanaan harian yang visual, modern, dengan a
 - **Landing Page** — Halaman depan dengan hero gradient, bento grid, dan call-to-action.
 - **Autentikasi** — Sign-up dan sign-in dengan email/password via Better Auth.
 - **Hari Ini** — Timeline vertikal dengan drag-and-drop block. Tinggi block otomatis sesuai durasi.
+- **Bulanan** — Grid kalender bulan penuh dengan navigasi, indikator block per hari.
 - **Mingguan** — Grid 7 hari dengan daftar lengkap block minggu ini.
 - **Recurring Block** — Block berulang harian/mingguan dengan opsi hapus seluruh seri.
 - **Focus Timer** — Timer Pomodoro berbasis stopwatch yang terhubung dengan blok waktu. Break proporsional dengan durasi fokus. Bip di setiap milestone.

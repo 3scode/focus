@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { CalendarDays, LayoutGrid, Timer, BarChart3, Settings, LogOut, User, Clock, CheckSquare } from "lucide-react"
+import { CalendarDays, LayoutGrid, Calendar, Timer, BarChart3, Settings, LogOut, User, Clock, CheckSquare } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
 
 const links = [
   { href: "/today", label: "Today", icon: CalendarDays },
+  { href: "/month", label: "Month", icon: Calendar },
   { href: "/week", label: "Week", icon: LayoutGrid },
   { href: "/habits", label: "Habits", icon: CheckSquare },
   { href: "/timer", label: "Timer", icon: Timer },
