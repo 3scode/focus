@@ -5,6 +5,25 @@ import { useApp } from "./index"
 
 export type Phase = "idle" | "focus" | "break"
 
+export function playCompletionSound() {
+  try {
+    const ctx = new AudioContext()
+    for (let i = 0; i < 15; i++) {
+      const t = ctx.currentTime + i * 2
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = "sine"
+      osc.frequency.value = 880
+      gain.gain.setValueAtTime(0.3, t)
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.8)
+      osc.start(t)
+      osc.stop(t + 0.8)
+    }
+  } catch {}
+}
+
 interface TimerContextValue {
   phase: Phase
   elapsed: number
@@ -164,6 +183,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         clear()
         setIsRunning(false)
         setPhase("idle")
+        playCompletionSound()
       }
     }
   }, [phase, clear])

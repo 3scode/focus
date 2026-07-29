@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useCallback, useEffect, useRef } from "react"
+import { useMemo, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { addDays } from "date-fns/addDays"
 import { format } from "date-fns/format"
@@ -62,16 +62,27 @@ function ReviewContent() {
     const now = new Date()
     const completed = dayBlocks.filter((b) => b.completed)
     const missed = dayBlocks.filter((b) => !b.completed && b.endTime < format(now, "HH:mm"))
-    const focusTime = dayBlocks.reduce((sum, b) => {
+    const savedTime = dayBlocks.reduce((sum, b) => {
       const sessions = b.focusSessions ?? []
       return sum + sessions.reduce((s, fs) => s + fs.durationMinutes, 0)
     }, 0)
-    return { completed, missed, focusTime, total: dayBlocks.length }
-  }, [dayBlocks])
+    const activeMins = timerCtx.phase !== "idle" && activeBlockId !== null
+      ? timerCtx.elapsed / 60
+      : 0
+    return { completed, missed, focusTime: savedTime + activeMins, total: dayBlocks.length }
+  }, [dayBlocks, timerCtx.elapsed, timerCtx.phase, activeBlockId])
 
   const totalSessions = useMemo(() => {
-    return dayBlocks.reduce((sum, b) => sum + (b.focusSessions ?? []).length, 0)
-  }, [dayBlocks])
+    const saved = dayBlocks.reduce((sum, b) => sum + (b.focusSessions ?? []).length, 0)
+    const hasActive = timerCtx.phase !== "idle" && activeBlockId !== null ? 1 : 0
+    return saved + hasActive
+  }, [dayBlocks, timerCtx.phase, activeBlockId])
+
+  const focusProgress = useMemo(() => {
+    const totalScheduled = dayBlocks.reduce((sum, b) => sum + calcDuration(b.startTime, b.endTime), 0)
+    const pct = totalScheduled > 0 ? Math.min(100, Math.round((stats.focusTime / totalScheduled) * 100)) : 0
+    return { totalScheduled, pct }
+  }, [dayBlocks, stats.focusTime])
 
   const todayHabitRecords = useMemo(() => {
     return habitRecords.filter((r) => r.date === currentDate)
@@ -88,6 +99,13 @@ function ReviewContent() {
   }, [todayHabitRecords, habits, habitRecords])
 
   const notifiedDone = useRef<Set<string>>(new Set())
+  const [showFocusDetail, setShowFocusDetail] = useState(false)
+
+  const catMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    categories.forEach((c) => { map[c.id] = c.color })
+    return map
+  }, [categories])
 
   useEffect(() => {
     for (const block of dayBlocks) {
@@ -112,6 +130,10 @@ function ReviewContent() {
   const handleRescheduleAll = useCallback(async () => {
     for (const block of stats.missed) await handleReschedule(block.id)
   }, [stats.missed, handleReschedule])
+
+  const scrollTo = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [])
 
   const prevDay = useCallback(() => {
     const prev = addDays(dateObj, -1)
@@ -281,44 +303,201 @@ function ReviewContent() {
           {/* Block Stats */}
           <section className="grid grid-cols-3 gap-3">
             {[
-              { icon: CheckCircle2, value: stats.completed.length, label: "Selesai", sub: stats.total > 0 ? `${Math.round((stats.completed.length / stats.total) * 100)}% dari ${stats.total}` : "0%", color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
-              { icon: Circle, value: stats.missed.length, label: "Terlewat", sub: stats.missed.length > 0 ? "Butuh reschedule" : "—", color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
-              { icon: Timer, value: stats.focusTime > 0 ? (stats.focusTime >= 60 ? `${Math.round(stats.focusTime / 60)}j` : `${stats.focusTime}m`) : "0", label: "Fokus", sub: totalSessions > 0 ? `${totalSessions} sesi fokus` : "—", color: "#5E6AD2", bg: "rgba(94,106,210,0.1)" },
+              { icon: CheckCircle2, value: stats.completed.length, label: "Selesai", sub: stats.total > 0 ? `${Math.round((stats.completed.length / stats.total) * 100)}% dari ${stats.total}` : "0%", color: "#22C55E", bg: "rgba(34,197,94,0.1)", target: "section-selesai" },
+              { icon: Circle, value: stats.missed.length, label: "Terlewat", sub: stats.missed.length > 0 ? "Butuh reschedule" : "—", color: "#F59E0B", bg: "rgba(245,158,11,0.1)", target: "section-terlewat" },
+              { icon: Timer, value: stats.focusTime > 0 ? (stats.focusTime >= 60 ? `${Math.round(stats.focusTime / 60)}j` : `${Math.floor(stats.focusTime)}m`) : "0", label: "Fokus", sub: totalSessions > 0 ? `${totalSessions} sesi fokus` : "—", color: "#5E6AD2", bg: "rgba(94,106,210,0.1)", target: "section-habits" },
             ].map((s) => (
-              <div key={s.label} className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.02]" style={{ background: `linear-gradient(135deg, ${s.bg}, transparent)`, border: `1px solid ${s.color}15`, boxShadow: `0 0 0 1px ${s.color}08` }}>
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => scrollTo(s.target)}
+                className="relative overflow-hidden rounded-xl p-4 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                style={{ background: `linear-gradient(135deg, ${s.bg}, transparent)`, border: `1px solid ${s.color}15`, boxShadow: `0 0 0 1px ${s.color}08` }}
+              >
                 <div className="absolute top-0 right-0 w-20 h-20 rounded-full -translate-y-1/2 translate-x-1/2" style={{ background: `${s.color}08` }} />
                 <s.icon className="w-5 h-5 mb-2" style={{ color: s.color }} />
                 <p className="text-2xl font-bold text-[#EDEDEF] tabular-nums">{s.value}</p>
                 <p className="text-[11px] font-medium text-[#8A8F98] mt-0.5">{s.label}</p>
                 <p className="text-[10px] mt-0.5" style={{ color: s.color }}>{s.sub}</p>
-              </div>
+              </button>
             ))}
           </section>
+
+          {/* Focus Progress Card */}
+          <div className="rounded-xl overflow-hidden transition-all duration-200" style={{ background: "linear-gradient(135deg, rgba(94,106,210,0.1), rgba(94,106,210,0.03))", border: "1px solid rgba(94,106,210,0.12)", boxShadow: "0 0 0 1px rgba(94,106,210,0.06)" }}>
+            <button
+              type="button"
+              onClick={() => setShowFocusDetail(!showFocusDetail)}
+              className="w-full p-4 text-left transition-all duration-200 hover:brightness-110 active:brightness-90 cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Timer className="w-4 h-4 text-[#5E6AD2]" />
+                  <span className="text-sm font-semibold text-[#EDEDEF]">Progress Fokus</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-[#5E6AD2] tabular-nums">{focusProgress.pct}%</span>
+                  <svg className={`w-4 h-4 text-[#8A8F98] transition-transform duration-200 ${showFocusDetail ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${focusProgress.pct}%`,
+                    background: focusProgress.pct >= 100 ? "linear-gradient(90deg, #22C55E, #16A34A)" : "linear-gradient(90deg, #5E6AD2, #818CF8)",
+                  }}
+                />
+              </div>
+              <p className="text-xs text-[#8A8F98] mt-1.5">
+                {Math.floor(stats.focusTime)}m / {focusProgress.totalScheduled}m dari jadwal
+                {timerCtx.phase !== "idle" && activeBlockId !== null && (
+                  <span className="inline-flex items-center gap-1 ml-2 text-[#F59E0B]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-pulse inline-block" />
+                    Live
+                  </span>
+                )}
+              </p>
+            </button>
+
+            {showFocusDetail && (
+              <div className="border-t border-white/[0.06] px-4 pb-4 pt-3 space-y-2">
+                {timerCtx.phase !== "idle" && activeBlockId && (() => {
+                  const activeBlock = dayBlocks.find((b) => b.id === activeBlockId)
+                  if (!activeBlock) return null
+                  const color = activeBlock.color ?? catMap[activeBlock.categoryId] ?? "#6B7280"
+                  const scheduled = calcDuration(activeBlock.startTime, activeBlock.endTime)
+                  const savedMins = activeBlock.focusSessions.reduce((s, fs) => s + fs.durationMinutes, 0)
+                  const currentMins = timerCtx.elapsed / 60
+                  const totalMins = savedMins + currentMins
+                  const pct = Math.min(100, Math.round((totalMins / scheduled) * 100))
+                  return (
+                    <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(245,158,11,0.2)" }}>
+                      <div className="flex items-center gap-2 px-3 py-2" style={{ background: "rgba(245,158,11,0.08)" }}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-pulse inline-block shrink-0" />
+                        <span className="text-[11px] font-semibold text-[#F59E0B]">Sedang Berjalan</span>
+                      </div>
+                      <div className="p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                          <span className="text-sm font-medium text-[#EDEDEF] truncate">{activeBlock.title}</span>
+                        </div>
+                        <p className="text-[11px] text-[#8A8F98] mb-1.5">{activeBlock.startTime} — {activeBlock.endTime}</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #F59E0B, #D97706)" }} />
+                          </div>
+                          <span className="text-[10px] font-medium tabular-nums text-[#F59E0B]">{Math.floor(totalMins)}m / {scheduled}m</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {stats.completed.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#22C55E] mb-1.5">Selesai ({stats.completed.length})</p>
+                    <div className="space-y-1">
+                      {stats.completed.slice(0, 5).map((b) => {
+                        const color = b.color ?? catMap[b.categoryId] ?? "#6B7280"
+                        const scheduled = calcDuration(b.startTime, b.endTime)
+                        const focusMins = b.focusSessions.reduce((s, fs) => s + fs.durationMinutes, 0)
+                        const pct = Math.min(100, Math.round((focusMins / scheduled) * 100))
+                        return (
+                          <div key={b.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                            <span className="text-xs text-[#8A8F98] flex-1 truncate">{b.title}</span>
+                            <span className="text-[10px] font-medium text-[#22C55E]">{focusMins}m</span>
+                            <div className="w-16 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#22C55E" }} />
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {stats.completed.length > 5 && <p className="text-[10px] text-[#5A5E66] text-center">+{stats.completed.length - 5} lainnya</p>}
+                    </div>
+                  </div>
+                )}
+
+                {stats.missed.filter((b) => b.id !== activeBlockId).length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#F59E0B] mb-1.5">Terlewat ({stats.missed.filter((b) => b.id !== activeBlockId).length})</p>
+                    <div className="space-y-1">
+                      {stats.missed.filter((b) => b.id !== activeBlockId).slice(0, 5).map((b) => {
+                        const color = b.color ?? catMap[b.categoryId] ?? "#6B7280"
+                        const focusMins = b.focusSessions.reduce((s, fs) => s + fs.durationMinutes, 0)
+                        return (
+                          <div key={b.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                            <span className="text-xs text-[#8A8F98] flex-1 truncate">{b.title}</span>
+                            {focusMins > 0 && <span className="text-[10px] text-[#5A5E66]">{focusMins}m</span>}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {dayBlocks.filter((b) => !b.completed && !(timerCtx.phase !== "idle" && b.id === activeBlockId) && !(b.endTime < format(new Date(), "HH:mm"))).length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#5E6AD2] mb-1.5">Tersisa</p>
+                    <div className="space-y-1">
+                      {dayBlocks.filter((b) => !b.completed && !(timerCtx.phase !== "idle" && b.id === activeBlockId) && !(b.endTime < format(new Date(), "HH:mm"))).map((b) => {
+                        const color = b.color ?? catMap[b.categoryId] ?? "#6B7280"
+                        return (
+                          <div key={b.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                            <span className="text-xs text-[#8A8F98] flex-1 truncate">{b.title}</span>
+                            <span className="text-[10px] text-[#5A5E66]">{b.startTime}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Habit Stats Row */}
           {habits.length > 0 && (
             <section className="grid grid-cols-3 gap-3">
-              <div className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, rgba(94,106,210,0.1), transparent)", border: "1px solid rgba(94,106,210,0.12)", boxShadow: "0 0 0 1px rgba(94,106,210,0.06)" }}>
+              <button
+                type="button"
+                onClick={() => scrollTo("section-habits")}
+                className="relative overflow-hidden rounded-xl p-4 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                style={{ background: "linear-gradient(135deg, rgba(94,106,210,0.1), transparent)", border: "1px solid rgba(94,106,210,0.12)", boxShadow: "0 0 0 1px rgba(94,106,210,0.06)" }}
+              >
                 <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-[#5E6AD2]/5 -translate-y-1/2 translate-x-1/2" />
                 <ListChecks className="w-5 h-5 text-[#5E6AD2] mb-2" />
                 <p className="text-2xl font-bold text-[#EDEDEF] tabular-nums">{habitStats.pct}%</p>
                 <p className="text-[11px] font-medium text-[#8A8F98] mt-0.5">Habit</p>
                 <p className="text-[10px] text-[#5A5E66] mt-0.5">{habitStats.done}/{habitStats.total} selesai</p>
-              </div>
-              <div className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.1), transparent)", border: "1px solid rgba(245,158,11,0.12)", boxShadow: "0 0 0 1px rgba(245,158,11,0.06)" }}>
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTo("section-habits")}
+                className="relative overflow-hidden rounded-xl p-4 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.1), transparent)", border: "1px solid rgba(245,158,11,0.12)", boxShadow: "0 0 0 1px rgba(245,158,11,0.06)" }}
+              >
                 <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-[#F59E0B]/5 -translate-y-1/2 translate-x-1/2" />
                 <Flame className="w-5 h-5 text-[#F59E0B] mb-2" />
                 <p className="text-2xl font-bold text-[#EDEDEF] tabular-nums">{habitStats.bestStreak}</p>
                 <p className="text-[11px] font-medium text-[#8A8F98] mt-0.5">Streak</p>
                 <p className="text-[10px] text-[#5A5E66] mt-0.5">hari berturut-turut</p>
-              </div>
-              <div className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, rgba(244,63,94,0.1), transparent)", border: "1px solid rgba(244,63,94,0.12)", boxShadow: "0 0 0 1px rgba(244,63,94,0.06)" }}>
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTo("section-habits")}
+                className="relative overflow-hidden rounded-xl p-4 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                style={{ background: "linear-gradient(135deg, rgba(244,63,94,0.1), transparent)", border: "1px solid rgba(244,63,94,0.12)", boxShadow: "0 0 0 1px rgba(244,63,94,0.06)" }}
+              >
                 <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-[#F43F5E]/5 -translate-y-1/2 translate-x-1/2" />
                 <X className="w-5 h-5 text-[#F43F5E] mb-2" />
                 <p className="text-2xl font-bold text-[#EDEDEF] tabular-nums">{habitStats.failed}</p>
                 <p className="text-[11px] font-medium text-[#8A8F98] mt-0.5">Gagal</p>
                 <p className="text-[10px] text-[#5A5E66] mt-0.5">{habitStats.pending} tersisa</p>
-              </div>
+              </button>
             </section>
           )}
 
@@ -336,7 +515,7 @@ function ReviewContent() {
 
           {/* Completed blocks */}
           {stats.completed.length > 0 && (
-            <section>
+            <section id="section-selesai">
               <div className="flex items-center gap-2 mb-3">
                 <h2 className="text-sm font-semibold text-[#8A8F98]">Selesai</h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#22C55E]" style={{ background: "rgba(34,197,94,0.12)" }}>{stats.completed.length} ITEM</span>
@@ -347,7 +526,7 @@ function ReviewContent() {
 
           {/* Missed blocks */}
           {stats.missed.length > 0 && (
-            <section>
+            <section id="section-terlewat">
               <div className="flex items-center gap-2 mb-3">
                 <h2 className="text-sm font-semibold text-[#8A8F98]">Terlewat</h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#F59E0B]" style={{ background: "rgba(245,158,11,0.12)" }}>{stats.missed.length} ITEM</span>
@@ -363,7 +542,7 @@ function ReviewContent() {
 
           {/* Habit Progress Cards */}
           {habits.length > 0 && (
-            <section>
+            <section id="section-habits">
               <div className="flex items-center gap-2 mb-3">
                 <h2 className="text-sm font-semibold text-[#8A8F98]">Progress Habit</h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#5E6AD2]" style={{ background: "rgba(94,106,210,0.12)" }}>{habitStats.done}/{habitStats.total}</span>

@@ -67,15 +67,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return
       }
       try {
-        const [b, c, h, hr, s] = await Promise.all([
+        const [b, c, h, hr, s, fs] = await Promise.all([
           api.getBlocks(),
           api.getCategories(),
           api.getHabits(),
           api.getHabitRecords(),
           api.getSettings(),
+          api.getFocusSessions(),
         ])
         if (!mounted) return
-        setBlocks(b)
+        const blocksWithSessions = b.map((block) => ({
+          ...block,
+          focusSessions: fs.filter((f) => f.blockId === block.id),
+        }))
+        setBlocks(blocksWithSessions)
         setCats(c)
         setHabitsState(h)
         setHabitRecordsState(hr)
@@ -225,12 +230,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       completed: shouldComplete || block.completed,
       updatedAt: new Date().toISOString(),
     }
-    try {
-      await api.saveBlock(updated)
-      setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
-    } catch {
+
+    setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { focusSessions: _fs, ...blockRest } = updated
+    api.saveBlock(blockRest as Block).catch(() => {
       toast.error("Gagal memperbarui block setelah sesi fokus")
-    }
+    })
   }, [])
 
   const setHabits = useCallback(async (h: Habit[]) => {

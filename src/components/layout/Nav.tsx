@@ -8,8 +8,8 @@ import { authClient } from "@/lib/auth-client"
 
 const links = [
   { href: "/today", label: "Today", icon: CalendarDays },
-  { href: "/month", label: "Month", icon: Calendar },
   { href: "/week", label: "Week", icon: LayoutGrid },
+  { href: "/month", label: "Month", icon: Calendar },
   { href: "/habits", label: "Habits", icon: CheckSquare },
   { href: "/timer", label: "Timer", icon: Timer },
   { href: "/review", label: "Review", icon: BarChart3 },

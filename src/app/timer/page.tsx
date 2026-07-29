@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { X, Play, Pause, SkipForward, CheckCheck, ChevronDown, ListTodo, Coffee } from "lucide-react"
 import { v4 as uuidv4 } from "uuid"
@@ -8,7 +8,7 @@ import { AuthGuard } from "@/components/layout/AuthGuard"
 import { Button } from "@/components/ui/Button"
 import { Sidebar, BottomTab } from "@/components/layout/Nav"
 import { useApp } from "@/store"
-import { useTimerContext } from "@/store/timer"
+import { useTimerContext, playCompletionSound } from "@/store/timer"
 import { formatDate, formatDuration, calcDuration } from "@/lib/time"
 
 function TaskSelector({ onSelect }: { onSelect: (id: string) => void }) {
@@ -95,16 +95,25 @@ function TimerContent() {
     : null
 
   const taskProgress = useMemo(() => {
-    if (timerCtx.phase !== "focus" || !block) return { percent: 0, current: 0, total: 0 }
+    if (!block) return { percent: 0, current: 0, total: 0 }
 
     const taskDurationMins = calcDuration(block.startTime, block.endTime)
     const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
-    const currentElapsedMins = Math.floor(timerCtx.elapsed / 60)
+    const currentElapsedMins = timerCtx.phase === "focus" ? Math.floor(timerCtx.elapsed / 60) : 0
     const currentTotal = totalFocusMins + currentElapsedMins
     const percent = Math.round((currentTotal / taskDurationMins) * 100)
 
     return { percent, current: currentTotal, total: taskDurationMins }
-  }, [timerCtx.phase, block, timerCtx.elapsed])
+  }, [block, timerCtx.phase, timerCtx.elapsed])
+
+  const completedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (taskProgress.percent >= 100 && block?.id && completedRef.current !== block.id) {
+      completedRef.current = block.id
+      playCompletionSound()
+    }
+  }, [taskProgress.percent, block?.id])
 
   const goHome = useCallback(() => {
     timerCtx.resetTimer()
@@ -138,8 +147,7 @@ function TimerContent() {
   const handleStopFocus = useCallback(async () => {
     const totalSeconds = timerCtx.stopFocus()
     await saveAndReset(totalSeconds)
-    setActiveBlockId(null)
-  }, [timerCtx, saveAndReset, setActiveBlockId])
+  }, [timerCtx, saveAndReset])
 
   const handleRestFocus = useCallback(async () => {
     const totalSeconds = timerCtx.stopFocus()
@@ -183,8 +191,34 @@ function TimerContent() {
   const isPaused = timerCtx.isPaused
   const timerRunning = timerCtx.isRunning && !timerCtx.isPaused
 
-  const minutesStr = String(isBreakPhase ? timerCtx.breakMinutes : timerCtx.minutes).padStart(2, "0")
-  const secondsStr = String(isBreakPhase ? timerCtx.breakSeconds : timerCtx.seconds).padStart(2, "0")
+  const timerDisplayValue = useMemo(() => {
+    if (isBreakPhase) {
+      const m = timerCtx.breakMinutes
+      const s = timerCtx.breakSeconds
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    }
+    if (!block) {
+      const m = timerCtx.minutes
+      const s = timerCtx.seconds
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    }
+    const totalFocusSec = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0) * 60
+    const totalSec = phase === "idle" ? totalFocusSec : totalFocusSec + timerCtx.elapsed
+    const m = Math.floor(totalSec / 60)
+    const s = totalSec % 60
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+  }, [isBreakPhase, phase, block, timerCtx.breakMinutes, timerCtx.breakSeconds, timerCtx.minutes, timerCtx.seconds, timerCtx.elapsed])
+
+  const displayLabel = useMemo(() => {
+    if (isBreakPhase) return "Break"
+    if (phase === "idle") {
+      if (block) return `Total: ${taskProgress.current} min`
+      return "Ready"
+    }
+    if (timerRunning) return "Focus Time"
+    if (timerCtx.elapsed > 0) return "Paused"
+    return "Ready"
+  }, [isBreakPhase, phase, block, taskProgress.current, timerRunning, timerCtx.elapsed])
 
   return (
     <div className="flex min-h-screen">
@@ -254,7 +288,7 @@ function TimerContent() {
                 stroke={isBreakPhase ? "#F59E0B" : "#5E6AD2"}
                 strokeWidth="6"
                 strokeDasharray={`${2 * Math.PI * 45}`}
-                strokeDashoffset={`${2 * Math.PI * 45 * (1 - (isBreakPhase ? timerCtx.breakProgress : timerCtx.stopwatchProgress) / 100)}`}
+                strokeDashoffset={`${2 * Math.PI * 45 * (1 - (isBreakPhase ? timerCtx.breakProgress : block ? taskProgress.percent : timerCtx.stopwatchProgress) / 100)}`}
                 strokeLinecap="round"
                 className="transition-all duration-1000 ease-linear"
                 style={{
@@ -263,15 +297,15 @@ function TimerContent() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-bold tabular-nums tracking-tight text-[#EDEDEF]">{minutesStr}:{secondsStr}</span>
+              <span className="text-5xl font-bold tabular-nums tracking-tight text-[#EDEDEF]">{timerDisplayValue}</span>
               <span className="text-sm text-[#8A8F98] mt-1">
-                {isBreakPhase ? "Break" : timerRunning ? "Focus Time" : timerCtx.elapsed > 0 ? "Paused" : "Ready"}
+                {displayLabel}
                 {phase === "focus" && timerCtx.completedSessions > 0 && <span className="ml-2">• {timerCtx.completedSessions} sesi</span>}
               </span>
             </div>
           </div>
 
-          {phase === "focus" && block && (
+          {block && (
             <div className="w-full max-w-xs space-y-2">
               <div className="w-full rounded-full h-2 overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                 <div

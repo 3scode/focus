@@ -1,10 +1,9 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronLeft, ChevronRight, Timer, CheckCircle2, TrendingUp, X, Check } from "lucide-react"
+import { ChevronLeft, ChevronRight, Timer, CheckCircle2, TrendingUp } from "lucide-react"
 import { DayCard } from "./DayCard"
 import { getWeekDays, isToday, format, formatDuration, calcDuration } from "@/lib/time"
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import type { Block } from "@/types"
 import type { Category } from "@/types"
 
@@ -16,13 +15,6 @@ interface WeekGridProps {
   onNextWeek: () => void
   onToday: () => void
   onDayTap: (date: Date) => void
-  onToggleComplete: (id: string, confirmed?: boolean) => void
-  onToggleMissed: (id: string) => void
-}
-
-function parseTime(t: string) {
-  const [h, m] = t.split(":").map(Number)
-  return h * 60 + m
 }
 
 export function WeekGrid({
@@ -33,11 +25,8 @@ export function WeekGrid({
   onNextWeek,
   onToday,
   onDayTap,
-  onToggleComplete,
-  onToggleMissed,
 }: WeekGridProps) {
-  const [sortAsc, setSortAsc] = useState(true)
-  const [confirmBlock, setConfirmBlock] = useState<Block | null>(null)
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
   const days = useMemo(() => getWeekDays(currentDate), [currentDate])
 
   const catMap = useMemo(() => {
@@ -73,34 +62,11 @@ export function WeekGrid({
     sum + b.focusSessions.reduce((s, f) => s + f.durationMinutes, 0), 0)
   const efficiency = totalBlocks > 0 ? Math.round((totalCompleted / totalBlocks) * 100) : 0
 
-  const weekLabel = useMemo(() => {
-    const start = days[0]
-    const end = days[6]
-    return `${format(start, "d MMM")} — ${format(end, "d MMM yyyy")}`
-  }, [days])
-
-  const allWeekBlocks = useMemo(() => {
-    const sorted = dayData.flatMap((d) =>
-      d.blocks.map((block) => ({ block, day: d.date }))
-    )
-    sorted.sort((a, b) => {
-      const diff = a.day.getTime() - b.day.getTime() || parseTime(a.block.startTime) - parseTime(b.block.startTime)
-      return sortAsc ? diff : -diff
-    })
-    return sorted
-  }, [dayData, sortAsc])
-
-  const handleToggleComplete = (block: Block) => {
-    const taskDurationMins = calcDuration(block.startTime, block.endTime)
-    const totalFocusMins = block.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
-
-    if (!block.completed && totalFocusMins < taskDurationMins) {
-      setConfirmBlock(block)
-      return
-    }
-
-    onToggleComplete(block.id)
-  }
+  const selectedDayBlocks = useMemo(() => {
+    if (!selectedDay) return []
+    const dateStr = format(selectedDay, "yyyy-MM-dd")
+    return blocks.filter((b) => b.date === dateStr)
+  }, [selectedDay, blocks])
 
   const formatFocusTime = (mins: number) => {
     const h = Math.floor(mins / 60)
@@ -139,7 +105,7 @@ export function WeekGrid({
             total={d.total}
             isToday={d.today}
             isPast={d.past}
-            onTap={() => onDayTap(d.date)}
+            onTap={() => setSelectedDay(d.date)}
           />
         ))}
       </div>
@@ -174,84 +140,91 @@ export function WeekGrid({
         </div>
       </div>
 
-      {allWeekBlocks.length > 0 && (
-        <div className="space-y-3">
+      {selectedDay && (
+        <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-[#8A8F98]">All Blocks — {weekLabel}</h3>
+            <h3 className="text-sm font-semibold text-[#8A8F98]">
+              {format(selectedDay, "EEEE, d MMMM yyyy")}
+            </h3>
             <button
-              onClick={() => setSortAsc(!sortAsc)}
-              className="px-2.5 py-1 text-xs font-medium rounded-md bg-[#5E6AD2] text-white transition-colors hover:bg-[#5E6AD2]/80"
+              onClick={() => onDayTap(selectedDay)}
+              className="text-xs font-medium text-[#5E6AD2] hover:underline transition-colors"
             >
-              Time {sortAsc ? "↑" : "↓"}
+              Lihat di Today →
             </button>
           </div>
+          {selectedDayBlocks.length === 0 ? (
+            <p className="text-sm text-[#8A8F98] py-8 text-center">Tidak ada blok di hari ini</p>
+          ) : (
+            <div className="space-y-2">
+              {selectedDayBlocks.map((block) => {
+                const color = block.color ?? catMap[block.categoryId] ?? "#6B7280"
+                const cat = categories.find((c) => c.id === block.categoryId)
+                const scheduled = calcDuration(block.startTime, block.endTime)
+                const focusMins = block.focusSessions.reduce((s, fs) => s + fs.durationMinutes, 0)
+                const progress = scheduled > 0 ? Math.min(100, Math.round((focusMins / scheduled) * 100)) : 0
 
-          <div className="space-y-1">
-            {allWeekBlocks.map(({ block, day }) => {
-              const color = block.color ?? catMap[block.categoryId] ?? "#6B7280"
-              const isMissed = block.missed && !block.completed
-              return (
-                <div
-                  key={block.id}
-                  className={`flex items-center gap-2 p-2 rounded-lg transition-all hover:brightness-110 ${block.completed ? "opacity-70" : ""} ${isMissed ? "opacity-50" : ""}`}
-                  style={{ backgroundColor: color, color: "white" }}
-                >
-                  {!block.completed && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onToggleMissed(block.id) }}
-                      className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/30 transition-colors"
-                      aria-label={isMissed ? "Mark pending" : "Mark missed"}
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {!isMissed && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleToggleComplete(block) }}
-                      className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-                      aria-label={block.completed ? "Mark incomplete" : "Mark complete"}
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                return (
                   <div
-                    className="flex-1 min-w-0 cursor-pointer"
-                    onClick={() => onDayTap(day)}
+                    key={block.id}
+                    className="flex items-stretch gap-0 rounded-xl overflow-hidden transition-all"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      opacity: block.completed ? 0.7 : 1,
+                    }}
                   >
-                    <div className="flex items-center gap-1.5 text-xs opacity-80 flex-wrap">
-                      <span className="font-medium">{format(day, "EEE, MMM d")}</span>
-                      <span>•</span>
-                      <span className="font-mono">{block.startTime}—{block.endTime}</span>
-                      <span className="font-mono opacity-60">{formatDuration(block.startTime, block.endTime)}</span>
+                    <div className="w-1 shrink-0" style={{ background: color }} />
+                    <div className="flex-1 min-w-0 p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-sm font-semibold truncate ${block.completed ? "text-[#8A8F98] line-through" : "text-[#EDEDEF]"}`}>
+                          {block.title}
+                        </span>
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0" style={{ background: `${color}20`, color }}>
+                          {cat?.name ?? "?"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-[#8A8F98]">{block.startTime} — {block.endTime}</span>
+                        <span className="text-[#5A5E66]">·</span>
+                        <span className="text-[11px] text-[#5A5E66]">{formatDuration(block.startTime, block.endTime)}</span>
+                        {focusMins > 0 && (
+                          <>
+                            <span className="text-[#5A5E66]">·</span>
+                            <span className="text-[11px] text-[#5E6AD2] flex items-center gap-1">
+                              <Timer className="w-3 h-3" /> {focusMins}m
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {focusMins > 0 && (
+                        <div className="mt-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                              <div
+                                className="h-full rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${progress}%`,
+                                  background: block.completed
+                                    ? "linear-gradient(90deg, #22C55E, #16A34A)"
+                                    : progress >= 100
+                                      ? "linear-gradient(90deg, #F59E0B, #D97706)"
+                                      : "linear-gradient(90deg, #5E6AD2, #818CF8)",
+                                }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-medium tabular-nums text-[#8A8F98]">{focusMins}m / {scheduled}m</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className={`text-sm font-medium truncate ${block.completed ? "line-through" : ""}`}>{block.title}</div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
-
-      <ConfirmDialog
-        open={confirmBlock !== null}
-        title="Konfirmasi selesai"
-        message={
-          confirmBlock
-            ? (() => {
-                const taskDurationMins = calcDuration(confirmBlock.startTime, confirmBlock.endTime)
-                const totalFocusMins = confirmBlock.focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0)
-                const progressPercent = Math.round((totalFocusMins / taskDurationMins) * 100)
-                return `Task "${confirmBlock.title}" belum selesai! Progress: ${progressPercent}% (${totalFocusMins}/${taskDurationMins} menit)\n\nYakin ingin menandai selesai?`
-              })()
-            : ""
-        }
-        onConfirm={() => {
-          if (confirmBlock) onToggleComplete(confirmBlock.id, true)
-          setConfirmBlock(null)
-        }}
-        onCancel={() => setConfirmBlock(null)}
-      />
-    </div>
+    </div>  
   )
 }
