@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Play, Pause, Square, Timer, Coffee, GripHorizontal } from "lucide-react"
+import { Play, Pause, Square, Timer, Coffee, GripHorizontal, ExternalLink } from "lucide-react"
 import { useTimerContext } from "@/store/timer"
 
 const POS_KEY = "time-blocking:floating-pos"
@@ -66,6 +66,11 @@ export function FloatingTimer() {
     } catch {}
   }, [])
 
+  const handlePopOut = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.open("/timer", "focus-timer", "width=380,height=600,popup=1")
+  }, [])
+
   if (!mounted || phase === "idle") return null
 
   const isBreak = phase === "break"
@@ -96,52 +101,60 @@ export function FloatingTimer() {
   return (
     <div
       ref={elRef}
-      className="flex items-center gap-2 px-3 py-2 rounded-full cursor-pointer animate-scale-in"
+      className="flex items-center gap-3 px-4 py-2.5 rounded-full cursor-pointer animate-scale-in"
       style={style}
       onClick={handleClick}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      <GripHorizontal className="w-3.5 h-3.5 text-[#8A8F98] shrink-0" />
+      <GripHorizontal className="w-4 h-4 text-[#8A8F98] shrink-0" />
 
       <div className={`flex items-center gap-1.5 ${isBreak ? "text-[#F59E0B]" : "text-[#5E6AD2]"}`}>
-        {isBreak ? <Coffee className="w-3.5 h-3.5" /> : <Timer className="w-3.5 h-3.5" />}
-        <span className="font-mono text-sm font-bold tabular-nums">
+        {isBreak ? <Coffee className="w-4 h-4" /> : <Timer className="w-4 h-4" />}
+        <span className="font-mono text-base font-bold tabular-nums">
           {isBreak
             ? `${String(breakMinutes).padStart(2, "0")}:${String(breakSeconds).padStart(2, "0")}`
             : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
         </span>
       </div>
 
-      <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
         {isBreak ? (
           <button
             onClick={skipBreak}
-            className="p-1 rounded-full hover:bg-white/[0.08] text-[#8A8F98] transition-colors"
+            className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#8A8F98] transition-colors"
             aria-label="Skip break"
           >
-            <Square className="w-3 h-3" />
+            <Square className="w-3.5 h-3.5" />
           </button>
         ) : (
           <>
             <button
               onClick={isRunning && !isPaused ? pauseFocus : resumeFocus}
-              className="p-1 rounded-full hover:bg-white/[0.08] text-[#8A8F98] transition-colors"
+              className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#8A8F98] transition-colors"
               aria-label={isRunning && !isPaused ? "Pause" : "Resume"}
             >
-              {isRunning && !isPaused ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+              {isRunning && !isPaused ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={skipFocus}
-              className="p-1 rounded-full hover:bg-white/[0.08] text-[#8A8F98] transition-colors"
+              className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#8A8F98] transition-colors"
               aria-label="Stop"
             >
-              <Square className="w-3 h-3" />
+              <Square className="w-3.5 h-3.5" />
             </button>
           </>
         )}
       </div>
+
+      <button
+        onClick={handlePopOut}
+        className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#5E6AD2] transition-colors opacity-60 hover:opacity-100"
+        aria-label="Open in window"
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+      </button>
     </div>
   )
 }
